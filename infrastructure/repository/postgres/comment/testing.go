@@ -1,10 +1,10 @@
 package comment
 
-import commentDomain "hacktiv/final-project/domain/comment"
+import commentDomain "hexagonal-fiber/domain/comment"
 
 type CommentTesting interface {
-	GetAll(page int64, limit int64) (*commentDomain.PaginationResultComment, error)
-	UserGetAll(page int64, userId int, limit int64) (*commentDomain.PaginationResultComment, error)
+	GetAll(page int, limit int) (*commentDomain.PaginationComment, error)
+	UserGetAll(page int, userId int, limit int) (*commentDomain.PaginationComment, error)
 	Create(newComment *commentDomain.Comment) (createdComment *commentDomain.Comment, err error)
 	GetByID(id int) (*commentDomain.Comment, error)
 	UserGetByID(id int, userId int) (*commentDomain.Comment, error)

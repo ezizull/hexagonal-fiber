@@ -3,12 +3,11 @@ package routes
 
 import (
 	// swaggerFiles for documentation
-	_ "hacktiv/final-project/docs"
-	"hacktiv/final-project/infrastructure/restapi/adapter"
+	_ "hexagonal-fiber/docs"
+	"hexagonal-fiber/infrastructure/restapi/adapter"
 
 	"github.com/gofiber/fiber/v2"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
-	swaggerFiles "github.com/swaggo/files"
 
 	"gorm.io/gorm"
 )
@@ -22,7 +21,7 @@ type Security struct {
 func ApplicationRootRouter(router fiber.Router, db *gorm.DB) {
 	// Documentation Swagger
 	{
-		router.Get("/swagger/*any", fiberSwagger.WrapHandler(swaggerFiles.Handler))
+		router.Get("/swagger/*any", fiberSwagger.WrapHandler)
 		router.Get("/", func(c *fiber.Ctx) error {
 			return c.Redirect("/swagger/index.html", fiber.StatusMovedPermanently)
 		})

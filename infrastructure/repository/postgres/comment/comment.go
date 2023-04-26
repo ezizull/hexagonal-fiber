@@ -2,10 +2,13 @@ package comment
 
 import (
 	"encoding/json"
-	commentDomain "hacktiv/final-project/domain/comment"
-	errorDomain "hacktiv/final-project/domain/errors"
+	commentDomain "hexagonal-fiber/domain/comment"
+	errorDomain "hexagonal-fiber/domain/error"
 	"log"
 
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
@@ -15,35 +18,34 @@ type Repository struct {
 }
 
 // GetAll Fetch all comment data
-func (r *Repository) GetAll(page int64, limit int64) (*commentDomain.PaginationResultComment, error) {
+func (r *Repository) GetAll(page int, limit int) (*commentDomain.PaginationComment, error) {
 	var comments []commentDomain.Comment
 	var total int64
 
 	err := r.DB.Model(&commentDomain.Comment{}).Count(&total).Error
 	if err != nil {
-		return &commentDomain.PaginationResultComment{}, err
+		return nil, err
 	}
+
 	offset := (page - 1) * limit
-	err = r.DB.Limit(int(limit)).Offset(int(offset)).Find(&comments).Error
-
-	if err != nil {
-		return &commentDomain.PaginationResultComment{}, err
+	if err = r.DB.Limit(limit).Offset(offset).Find(&comments).Error; err != nil {
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	return &commentDomain.PaginationResultComment{
+	return &commentDomain.PaginationComment{
 		Data:       commentDomain.ArrayToDomainMapper(&comments),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -51,35 +53,35 @@ func (r *Repository) GetAll(page int64, limit int64) (*commentDomain.PaginationR
 }
 
 // UserGetAll Fetch all comment data
-func (r *Repository) UserGetAll(userId int, page int64, limit int64) (*commentDomain.PaginationResultComment, error) {
+func (r *Repository) UserGetAll(userId int, page int, limit int) (*commentDomain.PaginationComment, error) {
 	var comments []commentDomain.Comment
 	var total int64
 
 	err := r.DB.Model(&commentDomain.Comment{}).Where("user_id = ?", userId).Count(&total).Error
 	if err != nil {
-		return &commentDomain.PaginationResultComment{}, err
+		return nil, err
 	}
 	offset := (page - 1) * limit
-	err = r.DB.Limit(int(limit)).Offset(int(offset)).Find(&comments).Error
+	err = r.DB.Limit(limit).Offset(offset).Find(&comments).Error
 
 	if err != nil {
-		return &commentDomain.PaginationResultComment{}, err
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	return &commentDomain.PaginationResultComment{
+	return &commentDomain.PaginationComment{
 		Data:       commentDomain.ArrayToDomainMapper(&comments),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -94,11 +96,10 @@ func (r *Repository) GetByID(id int) (*commentDomain.Comment, error) {
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "comment not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &commentDomain.Comment{}, err
 	}
 
 	return &comment, nil
@@ -112,11 +113,10 @@ func (r *Repository) UserGetByID(id int, userId int) (*commentDomain.Comment, er
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "comment not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &commentDomain.Comment{}, err
 	}
 
 	return &comment, nil
@@ -128,10 +128,10 @@ func (r *Repository) GetOneByMap(commentMap map[string]interface{}) (*commentDom
 
 	err := r.DB.Where(commentMap).Limit(1).Find(&comment).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+		err = fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		return nil, err
 	}
-	return &comment, err
+	return &comment, nil
 }
 
 // Create ... Insert New data
@@ -145,13 +145,13 @@ func (r *Repository) Create(newComment *commentDomain.Comment) (createdComment *
 		if err != nil {
 			return
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return
 	}
 
 	createdComment = newComment
@@ -166,32 +166,29 @@ func (r *Repository) Update(id int, updateComment *commentDomain.Comment) (*comm
 	err := r.DB.Model(&comment).
 		Updates(updateComment).Error
 
-	// err = config.DB.Save(comment).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &commentDomain.Comment{}, err
+			return nil, err
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &commentDomain.Comment{}, err
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-			return &commentDomain.Comment{}, err
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
 	err = r.DB.Where("id = ?", id).First(&comment).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &commentDomain.Comment{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "comment not found")
 	}
 
-	return &comment, err
+	return &comment, nil
 }
 
 // UserUpdate ... UserUpdate comment
@@ -203,7 +200,6 @@ func (r *Repository) UserUpdate(id int, userId int, updateComment *commentDomain
 	err := r.DB.Model(&comment).
 		Updates(updateComment).Error
 
-	// err = config.DB.Save(comment).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
@@ -211,24 +207,22 @@ func (r *Repository) UserUpdate(id int, userId int, updateComment *commentDomain
 		if err != nil {
 			return &commentDomain.Comment{}, err
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &commentDomain.Comment{}, err
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-			return &commentDomain.Comment{}, err
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
 	err = r.DB.Where("id = ?", id).First(&comment).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &commentDomain.Comment{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "comment not found")
 	}
 
-	return &comment, err
+	return &comment, nil
 }
 
 // Delete ... Delete comment
@@ -237,12 +231,11 @@ func (r *Repository) Delete(id int) (err error) {
 
 	log.Println("check ", tx)
 	if tx.Error != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return
+		return fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
 
 	if tx.RowsAffected == 0 {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+		return fiber.NewError(fiber.StatusNotFound, "comment not found")
 	}
 
 	return

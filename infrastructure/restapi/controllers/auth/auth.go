@@ -2,13 +2,13 @@
 package auth
 
 import (
-	useCaseAuth "hacktiv/final-project/application/usecases/auth"
-	errorDomain "hacktiv/final-project/domain/errors"
-	userDomain "hacktiv/final-project/domain/user"
-	"hacktiv/final-project/infrastructure/restapi/controllers"
-	"net/http"
+	useCaseAuth "hexagonal-fiber/application/usecases/auth"
+	userDomain "hexagonal-fiber/domain/user"
 
-	"github.com/gin-gonic/gin"
+	messageUtil "hexagonal-fiber/utils/constant/message"
+
+	"hexagonal-fiber/infrastructure/restapi/controllers"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -29,29 +29,30 @@ type Controller struct {
 func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
 	var request LoginRequest
 
-	if err = controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": appError.Error(),
+	if err = ctx.BodyParser(request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": messageUtil.ValidationError,
 		})
 		return
 	}
 
-	user := userDomain.LoginUser{
+	user, errResp := controllers.Validation(userDomain.LoginUser{
 		Email:    request.Email,
 		Password: request.Password,
+	})
+
+	if errResp != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errResp)
+		return
 	}
 
 	authDataUser, err := c.AuthService.Login(user)
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": err,
-		})
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.Status(http.StatusOK).JSON(authDataUser)
-	return
+	return ctx.Status(fiber.StatusOK).JSON(authDataUser)
 }
 
 // GetAccessTokenByRefreshToken godoc
@@ -66,25 +67,18 @@ func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
 func (c *Controller) GetAccessTokenByRefreshToken(ctx *fiber.Ctx) (err error) {
 	var request AccessTokenRequest
 
-	if err = controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": appError.Error(),
+	if err = ctx.BodyParser(request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": messageUtil.ValidationError,
 		})
 		return
 	}
 
-	// CSRF, err := ctx.Cookie("X-CSRF")
-	// if err != nil {
-	// 	appError := errorDomain.NewAppError(err, errorDomain.TokenGeneratorError)
-	// 	_ = ctx.Error(appError)
-	// 	return
-	// }
-
-	authDataUser, err := c.AuthService.AccessTokenByRefreshToken(request.RefreshToken, "CSRF")
+	authDataUser, err := c.AuthService.AccessTokenByRefreshToken(request.RefreshToken)
 	if err != nil {
-		_ = ctx.Error(err)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
-	ctx.JSON(http.StatusOK, authDataUser)
+
+	return ctx.Status(fiber.StatusOK).JSON(authDataUser)
 }

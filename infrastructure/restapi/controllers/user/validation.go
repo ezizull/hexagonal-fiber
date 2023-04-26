@@ -3,10 +3,11 @@ package user
 
 import (
 	"errors"
-	errorDomain "hacktiv/final-project/domain/errors"
-	userDomain "hacktiv/final-project/domain/user"
+	userDomain "hexagonal-fiber/domain/user"
 	"regexp"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func updateValidation(request *userDomain.UpdateUser) (err error) {
@@ -57,7 +58,7 @@ func updateValidation(request *userDomain.UpdateUser) (err error) {
 	}
 
 	if errorsValidation != nil {
-		err = errorDomain.NewAppError(errors.New(strings.Join(errorsValidation, ", ")), errorDomain.ValidationError)
+		err = fiber.NewError(fiber.StatusBadRequest, strings.Join(errorsValidation, ", "))
 	}
 	return
 }

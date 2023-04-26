@@ -2,9 +2,10 @@ package comment
 
 import (
 	"errors"
-	commentDomain "hacktiv/final-project/domain/comment"
-	errorDomain "hacktiv/final-project/domain/errors"
+	commentDomain "hexagonal-fiber/domain/comment"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func updateValidation(request *commentDomain.UpdateComment) (err error) {
@@ -18,8 +19,9 @@ func updateValidation(request *commentDomain.UpdateComment) (err error) {
 	}
 
 	if errorsValidation != nil {
-		err = errorDomain.NewAppError(errors.New(strings.Join(errorsValidation, ", ")), errorDomain.ValidationError)
+		err = fiber.NewError(fiber.StatusBadRequest, strings.Join(errorsValidation, ", "))
 	}
+
 	return
 }
 

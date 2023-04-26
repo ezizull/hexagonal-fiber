@@ -2,17 +2,15 @@
 package sosmed
 
 import (
-	"errors"
-	"net/http"
 	"strconv"
 
-	useCaseSosmed "hacktiv/final-project/application/usecases/sosmed"
-	errorDomain "hacktiv/final-project/domain/errors"
-	secureDomain "hacktiv/final-project/domain/security"
-	sosmedDomain "hacktiv/final-project/domain/sosmed"
-	"hacktiv/final-project/infrastructure/restapi/controllers"
+	useCaseSosmed "hexagonal-fiber/application/usecases/sosmed"
+	sosmedDomain "hexagonal-fiber/domain/sosmed"
 
-	"github.com/gin-gonic/gin"
+	authConst "hexagonal-fiber/utils/constant/auth"
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Controller is a struct that contains the sosmed service
@@ -32,32 +30,28 @@ type Controller struct {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed [post]
-func (c *Controller) NewSocialMedia(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) NewSocialMedia(ctx *fiber.Ctx) (err error) {
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
 	var request sosmedDomain.NewSocialMedia
-	if err := controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	request.UserID = authData.UserID
-	err := createValidation(request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	request.UserID = authUserID
+	if err = createValidation(request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	sosmed, err := c.SocialMediaService.Create(&request)
 	if err != nil {
-		_ = ctx.Error(err)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, sosmed)
+	return ctx.Status(fiber.StatusCreated).JSON(sosmed)
 }
 
 // GetAllSocialMedia godoc
@@ -65,35 +59,21 @@ func (c *Controller) NewSocialMedia(ctx *gin.Context) {
 // @Summary Get all SocialMedia
 // @Security ApiKeyAuth
 // @Description Get all SocialMedia on the system
-// @Success 200 {object} sosmedDomain.PaginationResultSocialMedia
+// @Success 200 {object} sosmedDomain.PaginationSocialMedia
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed [get]
-func (c *Controller) GetAllSocialMedia(ctx *gin.Context) {
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
-
-	page, err := strconv.ParseInt(pageStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
+func (c *Controller) GetAllSocialMedia(ctx *fiber.Ctx) (err error) {
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
 
 	sosmeds, err := c.SocialMediaService.GetAll(page, limit)
 	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, sosmeds)
+	return ctx.Status(fiber.StatusOK).JSON(sosmeds)
 }
 
 // GetAllOwnSocialMedia godoc
@@ -101,38 +81,23 @@ func (c *Controller) GetAllSocialMedia(ctx *gin.Context) {
 // @Summary Get all SocialMedia
 // @Security ApiKeyAuth
 // @Description Get all SocialMedia on the system
-// @Success 200 {object} sosmedDomain.PaginationResultSocialMedia
+// @Success 200 {object} sosmedDomain.PaginationSocialMedia
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed [get]
-func (c *Controller) GetAllOwnSocialMedia(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) GetAllOwnSocialMedia(ctx *fiber.Ctx) (err error) {
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
 
-	page, err := strconv.ParseInt(pageStr, 10, 64)
+	sosmeds, err := c.SocialMediaService.UserGetAll(authUserID, page, limit)
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	sosmeds, err := c.SocialMediaService.UserGetAll(authData.UserID, page, limit)
-	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, sosmeds)
+	return ctx.Status(fiber.StatusOK).JSON(sosmeds)
 }
 
 // GetSocialMediaByID godoc
@@ -145,22 +110,20 @@ func (c *Controller) GetAllOwnSocialMedia(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed/{sosmed_id} [get]
-func (c *Controller) GetSocialMediaByID(ctx *gin.Context) {
-	sosmedID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) GetSocialMediaByID(ctx *fiber.Ctx) (err error) {
+	sosmedID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("sosmed id is invalid"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "sosmed id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	sosmed, err := c.SocialMediaService.GetByID(sosmedID)
 	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	ctx.JSON(http.StatusOK, sosmed)
+	return ctx.Status(fiber.StatusOK).JSON(sosmed)
 }
 
 // UpdateSocialMedia godoc
@@ -173,48 +136,44 @@ func (c *Controller) GetSocialMediaByID(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed/{sosmed_id} [get]
-func (c *Controller) UpdateSocialMedia(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) UpdateSocialMedia(ctx *fiber.Ctx) (err error) {
+	authRole := ctx.Locals(authConst.AuthRole).(string)
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
-	sosmedID, err := strconv.Atoi(ctx.Param("id"))
+	sosmedID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "sosmed id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	var request sosmedDomain.UpdateSocialMedia
-	err = controllers.BindJSON(ctx, &request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	err = updateValidation(&request)
-	if err != nil {
-		_ = ctx.Error(err)
+	if err = updateValidation(&request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
 	var sosmed *sosmedDomain.SocialMedia
 
-	if authData.Role == "admin" {
+	if authRole == "admin" {
 		sosmed, err = c.SocialMediaService.Update(sosmedID, request)
 		if err != nil {
-			_ = ctx.Error(err)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	} else {
-		sosmed, err = c.SocialMediaService.UserUpdate(sosmedID, authData.UserID, request)
+		sosmed, err = c.SocialMediaService.UserUpdate(sosmedID, authUserID, request)
 		if err != nil {
-			_ = ctx.Error(err)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, sosmed)
+	return ctx.Status(fiber.StatusOK).JSON(sosmed)
 }
 
 // DeleteSocialMedia godoc
@@ -227,20 +186,18 @@ func (c *Controller) UpdateSocialMedia(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed/{sosmed_id} [get]
-func (c *Controller) DeleteSocialMedia(ctx *gin.Context) {
-	sosmedID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) DeleteSocialMedia(ctx *fiber.Ctx) (err error) {
+	sosmedID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		appError := fiber.NewError(fiber.StatusBadRequest, "sosmed id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	}
+
+	if err = c.SocialMediaService.Delete(sosmedID); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	err = c.SocialMediaService.Delete(sosmedID)
-	if err != nil {
-		_ = ctx.Error(err)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "resource deleted successfully"})
+	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "resource deleted successfully"})
 
 }

@@ -2,7 +2,7 @@
 package routes
 
 import (
-	authController "hacktiv/final-project/infrastructure/restapi/controllers/auth"
+	authController "hexagonal-fiber/infrastructure/restapi/controllers/auth"
 
 	"github.com/gofiber/fiber/v2"
 )

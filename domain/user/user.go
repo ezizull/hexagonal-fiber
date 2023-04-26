@@ -9,9 +9,9 @@ import (
 type User struct {
 	ID           int        `json:"id" example:"1099" gorm:"primaryKey"`
 	UserName     string     `json:"userName" example:"UserName" gorm:"column:user_name;uniqueIndex"`
-	Email        string     `json:"email" example:"some@mail.com" gorm:"unique;uniqueIndex"`
-	HashPassword string     `json:"hash_password" example:"SomeHashPass"`
-	Age          int        `json:"age" example:"1" binding:"required"`
+	Email        string     `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
+	HashPassword string     `json:"hash_password" example:"has@Password1"`
+	Age          int        `json:"age" example:"1" validate:"required"`
 	RoleID       string     `json:"role_id" gorm:"index"`
 	CreatedAt    time.Time  `json:"created_at,omitempty" example:"2021-02-24 20:19:39" gorm:"autoCreateTime:mili"`
 	UpdatedAt    time.Time  `json:"updated_at,omitempty" example:"2021-02-24 20:19:39" gorm:"autoUpdateTime:mili"`
@@ -23,8 +23,8 @@ func (*User) TableName() string {
 	return "users"
 }
 
-// PaginationResultUser is a struct that contains the pagination result for user
-type PaginationResultUser struct {
+// PaginationUser is a struct that contains the pagination result for user
+type PaginationUser struct {
 	Data       []User
 	Total      int
 	Limit      int

@@ -1,9 +1,9 @@
 package photo
 
 import (
-	photoDomain "hacktiv/final-project/domain/photo"
+	photoDomain "hexagonal-fiber/domain/photo"
 
-	photoRepository "hacktiv/final-project/infrastructure/repository/postgres/photo"
+	photoRepository "hexagonal-fiber/infrastructure/repository/postgres/photo"
 )
 
 // Service is a struct that contains the repository implementation for photo use case
@@ -13,14 +13,14 @@ type Service struct {
 }
 
 // GetAll is a function that returns all photos
-func (s *Service) GetAll(page int64, limit int64) (*photoDomain.PaginationResultPhoto, error) {
+func (s *Service) GetAll(page int, limit int) (*photoDomain.PaginationPhoto, error) {
 
 	all, err := s.PhotoRepository.GetAll(page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return &photoDomain.PaginationResultPhoto{
+	return &photoDomain.PaginationPhoto{
 		Data:       all.Data,
 		Total:      all.Total,
 		Limit:      all.Limit,
@@ -32,14 +32,14 @@ func (s *Service) GetAll(page int64, limit int64) (*photoDomain.PaginationResult
 }
 
 // UserGetAll is a function that returns all photos
-func (s *Service) UserGetAll(userId int, page int64, limit int64) (*photoDomain.PaginationResultPhoto, error) {
+func (s *Service) UserGetAll(userId int, page int, limit int) (*photoDomain.PaginationPhoto, error) {
 
 	all, err := s.PhotoRepository.UserGetAll(userId, page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return &photoDomain.PaginationResultPhoto{
+	return &photoDomain.PaginationPhoto{
 		Data:       all.Data,
 		Total:      all.Total,
 		Limit:      all.Limit,
@@ -51,7 +51,7 @@ func (s *Service) UserGetAll(userId int, page int64, limit int64) (*photoDomain.
 }
 
 // GetWithComments is a function that returns a photo by id
-func (s *Service) GetWithComments(id int, page int64, limit int64) (*photoDomain.ResponsePhotoComments, error) {
+func (s *Service) GetWithComments(id int, page int, limit int) (*photoDomain.ResponsePhotoComments, error) {
 	return s.PhotoRepository.GetWithComments(id, page, limit)
 }
 

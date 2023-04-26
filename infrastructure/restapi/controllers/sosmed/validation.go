@@ -2,9 +2,10 @@ package sosmed
 
 import (
 	"errors"
-	errorDomain "hacktiv/final-project/domain/errors"
-	sosmedDomain "hacktiv/final-project/domain/sosmed"
+	sosmedDomain "hexagonal-fiber/domain/sosmed"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func updateValidation(request *sosmedDomain.UpdateSocialMedia) (err error) {
@@ -25,7 +26,7 @@ func updateValidation(request *sosmedDomain.UpdateSocialMedia) (err error) {
 	}
 
 	if errorsValidation != nil {
-		err = errorDomain.NewAppError(errors.New(strings.Join(errorsValidation, ", ")), errorDomain.ValidationError)
+		err = fiber.NewError(fiber.StatusBadRequest, strings.Join(errorsValidation, ", "))
 	}
 	return
 }

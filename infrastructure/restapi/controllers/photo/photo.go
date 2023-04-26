@@ -2,17 +2,17 @@
 package photo
 
 import (
-	"errors"
-	"net/http"
 	"strconv"
 
-	useCasePhoto "hacktiv/final-project/application/usecases/photo"
-	errorDomain "hacktiv/final-project/domain/errors"
-	photoDomain "hacktiv/final-project/domain/photo"
-	secureDomain "hacktiv/final-project/domain/security"
-	"hacktiv/final-project/infrastructure/restapi/controllers"
+	useCasePhoto "hexagonal-fiber/application/usecases/photo"
+	photoDomain "hexagonal-fiber/domain/photo"
 
-	"github.com/gin-gonic/gin"
+	// secureDomain "hexagonal-fiber/domain/security"
+
+	authConst "hexagonal-fiber/utils/constant/auth"
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Controller is a struct that contains the photo service
@@ -32,32 +32,28 @@ type Controller struct {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [post]
-func (c *Controller) NewPhoto(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) NewPhoto(ctx *fiber.Ctx) (err error) {
+	UserID := ctx.Locals(authConst.AuthUserID).(int)
 
 	var request photoDomain.NewPhoto
-	if err := controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	request.UserID = authData.UserID
-	err := createValidation(request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	request.UserID = UserID
+	if err = createValidation(request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	photo, err := c.PhotoService.Create(&request)
 	if err != nil {
-		_ = ctx.Error(err)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, photo)
+	return ctx.Status(fiber.StatusCreated).JSON(photo)
 }
 
 // GetAllPhotos godoc
@@ -65,35 +61,21 @@ func (c *Controller) NewPhoto(ctx *gin.Context) {
 // @Summary Get all Photos
 // @Security ApiKeyAuth
 // @Description Get all Photos on the system
-// @Success 200 {object} photoDomain.PaginationResultPhoto
+// @Success 200 {object} photoDomain.PaginationPhoto
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [get]
-func (c *Controller) GetAllPhotos(ctx *gin.Context) {
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
-
-	page, err := strconv.ParseInt(pageStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
+func (c *Controller) GetAllPhotos(ctx *fiber.Ctx) (err error) {
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
 
 	photos, err := c.PhotoService.GetAll(page, limit)
 	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, photos)
+	return ctx.Status(fiber.StatusCreated).JSON(photos)
 }
 
 // GetAllOwnPhotos godoc
@@ -101,38 +83,23 @@ func (c *Controller) GetAllPhotos(ctx *gin.Context) {
 // @Summary Get all Photos
 // @Security ApiKeyAuth
 // @Description Get all Photos on the system
-// @Success 200 {object} photoDomain.PaginationResultPhoto
+// @Success 200 {object} photoDomain.PaginationPhoto
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [get]
-func (c *Controller) GetAllOwnPhotos(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) GetAllOwnPhotos(ctx *fiber.Ctx) (err error) {
+	UserID := ctx.Locals(authConst.AuthUserID).(int)
 
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
 
-	page, err := strconv.ParseInt(pageStr, 10, 64)
+	photos, err := c.PhotoService.UserGetAll(UserID, page, limit)
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	photos, err := c.PhotoService.UserGetAll(authData.UserID, page, limit)
-	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, photos)
+	return ctx.Status(fiber.StatusCreated).JSON(photos)
 }
 
 // GetPhotoWithComments godoc
@@ -145,38 +112,23 @@ func (c *Controller) GetAllOwnPhotos(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
-func (c *Controller) GetPhotoWithComments(ctx *gin.Context) {
-	photoID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) GetPhotoWithComments(ctx *fiber.Ctx) (err error) {
+	photoID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("photo id is invalid"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	}
+
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
+
+	photoComments, err := c.PhotoService.GetWithComments(photoID, page, limit)
+	if err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
-
-	page, err := strconv.ParseInt(pageStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-
-	photo, err := c.PhotoService.GetWithComments(photoID, page, limit)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, photo)
+	return ctx.Status(fiber.StatusCreated).JSON(photoComments)
 }
 
 // GetPhotoByID godoc
@@ -189,22 +141,20 @@ func (c *Controller) GetPhotoWithComments(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
-func (c *Controller) GetPhotoByID(ctx *gin.Context) {
-	photoID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) GetPhotoByID(ctx *fiber.Ctx) (err error) {
+	photoID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("photo id is invalid"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	photo, err := c.PhotoService.GetByID(photoID)
 	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, photo)
+	return ctx.Status(fiber.StatusCreated).JSON(photo)
 }
 
 // UpdatePhoto godoc
@@ -217,48 +167,44 @@ func (c *Controller) GetPhotoByID(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
-func (c *Controller) UpdatePhoto(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) UpdatePhoto(ctx *fiber.Ctx) (err error) {
+	authRole := ctx.Locals(authConst.AuthRole).(string)
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
-	photoID, err := strconv.Atoi(ctx.Param("id"))
+	photoID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	var request photoDomain.UpdatePhoto
-	err = controllers.BindJSON(ctx, &request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	err = updateValidation(&request)
-	if err != nil {
-		_ = ctx.Error(err)
+	if err = updateValidation(&request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
 	var photo *photoDomain.Photo
 
-	if authData.Role == "admin" {
+	if authRole == "admin" {
 		photo, err = c.PhotoService.Update(photoID, request)
 		if err != nil {
-			_ = ctx.Error(err)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	} else {
-		photo, err = c.PhotoService.UserUpdate(photoID, authData.UserID, request)
+		photo, err = c.PhotoService.UserUpdate(photoID, authUserID, request)
 		if err != nil {
-			_ = ctx.Error(err)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, photo)
+	return ctx.Status(fiber.StatusOK).JSON(photo)
 }
 
 // DeletePhoto godoc
@@ -271,20 +217,18 @@ func (c *Controller) UpdatePhoto(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
-func (c *Controller) DeletePhoto(ctx *gin.Context) {
-	photoID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) DeletePhoto(ctx *fiber.Ctx) (err error) {
+	photoID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	}
+
+	if err = c.PhotoService.Delete(photoID); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	err = c.PhotoService.Delete(photoID)
-	if err != nil {
-		_ = ctx.Error(err)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "resource deleted successfully"})
+	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "resource deleted successfully"})
 
 }

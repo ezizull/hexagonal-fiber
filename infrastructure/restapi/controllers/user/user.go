@@ -2,17 +2,15 @@
 package user
 
 import (
-	"errors"
-	"net/http"
 	"strconv"
 
-	useCaseUser "hacktiv/final-project/application/usecases/user"
-	errorDomain "hacktiv/final-project/domain/errors"
-	secureDomain "hacktiv/final-project/domain/security"
-	userDomain "hacktiv/final-project/domain/user"
-	"hacktiv/final-project/infrastructure/restapi/controllers"
+	useCaseUser "hexagonal-fiber/application/usecases/user"
+	userDomain "hexagonal-fiber/domain/user"
 
-	"github.com/gin-gonic/gin"
+	authConst "hexagonal-fiber/utils/constant/auth"
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Controller is a struct that contains the user service
@@ -32,29 +30,26 @@ type Controller struct {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user [post]
-func (c *Controller) NewUser(ctx *gin.Context) {
+func (c *Controller) NewUser(ctx *fiber.Ctx) (err error) {
 	var request userDomain.NewUser
 
-	if err := controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err = ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	err := createValidation(request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err = createValidation(request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	user, err := c.UserService.Create(request)
 	if err != nil {
-		_ = ctx.Error(err)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
-	userResponse := user.DomainToResponseMapper()
-	ctx.JSON(http.StatusOK, userResponse)
+
+	return ctx.Status(fiber.StatusCreated).JSON(user.DomainToResponseMapper())
 }
 
 // GetAllUsers godoc
@@ -66,15 +61,14 @@ func (c *Controller) NewUser(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user [get]
-func (c *Controller) GetAllUsers(ctx *gin.Context) {
+func (c *Controller) GetAllUsers(ctx *fiber.Ctx) (err error) {
 	users, err := c.UserService.GetAll()
 	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, userDomain.ArrayDomainToResponseMapper(users))
+	return ctx.Status(fiber.StatusCreated).JSON(userDomain.ArrayDomainToResponseMapper(users))
 }
 
 // GetUsersByID godoc
@@ -87,38 +81,38 @@ func (c *Controller) GetAllUsers(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
-func (c *Controller) GetUsersByID(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
+	authRole := ctx.Locals(authConst.AuthRole).(string)
 
-	if authData.Role == "admin" {
-		userID, err := strconv.Atoi(ctx.Param("id"))
+	if authRole == "admin" {
+		var userID int
+		userID, err = strconv.Atoi(ctx.Params("id"))
 		if err != nil {
-			appError := errorDomain.NewAppError(errors.New("user id is invalid"), errorDomain.ValidationError)
-			_ = ctx.Error(appError)
+			appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
+			return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+		}
+
+		var userRole *userDomain.ResponseUserRole
+
+		userRole, err = c.UserService.GetWithRole(userID)
+		if err != nil {
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 
-		userRole, err := c.UserService.GetWithRole(userID)
-		if err != nil {
-			appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-			_ = ctx.Error(appError)
-			return
-		}
-
-		ctx.JSON(http.StatusOK, userRole)
-		return
+		return ctx.Status(fiber.StatusOK).JSON(userRole)
 
 	} else {
-		userRole, err := c.UserService.GetWithRole(authData.UserID)
+		var userRole *userDomain.ResponseUserRole
+		authUserID := ctx.Locals(authConst.AuthUserID).(int)
+
+		userRole, err = c.UserService.GetWithRole(authUserID)
 		if err != nil {
-			appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-			_ = ctx.Error(appError)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 
-		ctx.JSON(http.StatusOK, userRole)
-		return
+		return ctx.Status(fiber.StatusOK).JSON(userRole)
 
 	}
 
@@ -134,34 +128,31 @@ func (c *Controller) GetUsersByID(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
-func (c *Controller) UpdateUser(ctx *gin.Context) {
-	userID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) UpdateUser(ctx *fiber.Ctx) (err error) {
+	userID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
-	var request userDomain.UpdateUser
 
-	err = controllers.BindJSON(ctx, &request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	var request userDomain.UpdateUser
+	if err = ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
-	err = updateValidation(&request)
-	if err != nil {
-		_ = ctx.Error(err)
+
+	if err = updateValidation(&request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
 	user, err := c.UserService.Update(userID, request)
 	if err != nil {
-		_ = ctx.Error(err)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, user.DomainToResponseMapper())
+	return ctx.Status(fiber.StatusOK).JSON(user.DomainToResponseMapper())
 }
 
 // DeleteUser godoc
@@ -174,19 +165,17 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
-func (c *Controller) DeleteUser(ctx *gin.Context) {
-	userID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) DeleteUser(ctx *fiber.Ctx) (err error) {
+	userID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	}
+
+	if err = c.UserService.Delete(userID); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	err = c.UserService.Delete(userID)
-	if err != nil {
-		_ = ctx.Error(err)
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "resource deleted successfully"})
-
+	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "resource deleted successfully"})
 }

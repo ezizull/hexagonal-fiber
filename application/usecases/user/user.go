@@ -2,11 +2,9 @@
 package user
 
 import (
-	"errors"
-	errorDomain "hacktiv/final-project/domain/errors"
-	userDomain "hacktiv/final-project/domain/user"
-	roleRepository "hacktiv/final-project/infrastructure/repository/postgres/role"
-	userRepository "hacktiv/final-project/infrastructure/repository/postgres/user"
+	userDomain "hexagonal-fiber/domain/user"
+	roleRepository "hexagonal-fiber/infrastructure/repository/postgres/role"
+	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -41,14 +39,14 @@ func (s *Service) Create(newUser userDomain.NewUser) (*userDomain.User, error) {
 
 	_, err := s.RoleRepository.GetByID(newUser.RoleID)
 	if err != nil {
-		return &userDomain.User{}, errorDomain.NewAppError(errors.New("role not found"), errorDomain.NotFound)
+		return nil, err
 	}
 
 	user := newUser.ToDomainMapper()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return &userDomain.User{}, err
+		return nil, err
 	}
 	user.HashPassword = string(hash)
 

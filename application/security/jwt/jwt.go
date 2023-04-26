@@ -2,13 +2,12 @@
 package jwt
 
 import (
-	"errors"
 	"fmt"
-	errorDomain "hacktiv/final-project/domain/errors"
-	secureDomain "hacktiv/final-project/domain/security"
+	secureDomain "hexagonal-fiber/domain/security"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gofiber/fiber/v2"
 )
 
 // GenerateJWTToken generates a JWT token (refresh or access)
@@ -48,11 +47,11 @@ func GenerateJWTToken(userID int, tokenType string, roleName string) (appToken *
 }
 
 // GetClaimsAndVerifyToken verifies the token and returns the claims
-func GetClaimsAndVerifyToken(tokenString string, tokenType string, oldCSRF string) (claims jwt.MapClaims, err error) {
+func GetClaimsAndVerifyToken(tokenString string, tokenType string) (claims jwt.MapClaims, err error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			message := fmt.Sprintf("unexpected signing method: %v", token.Header["alg"])
-			return nil, errorDomain.NewAppError(errors.New(message), errorDomain.NotAuthenticated)
+			return nil, fiber.NewError(fiber.StatusUnauthorized, message)
 		}
 
 		return secureDomain.PublicKey, nil
@@ -60,12 +59,12 @@ func GetClaimsAndVerifyToken(tokenString string, tokenType string, oldCSRF strin
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if claims["type"] != tokenType {
-			return nil, errorDomain.NewAppError(errors.New("invalid token type"), errorDomain.NotAuthenticated)
+			return nil, fiber.NewError(fiber.StatusUnauthorized, "invalid token type")
 		}
 
 		var timeExpire = claims["exp"].(float64)
 		if time.Now().Unix() > int64(timeExpire) {
-			return nil, errorDomain.NewAppError(errors.New("token expired"), errorDomain.NotAuthenticated)
+			return nil, fiber.NewError(fiber.StatusUnauthorized, "token expired")
 		}
 
 		return claims, nil

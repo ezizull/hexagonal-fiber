@@ -2,17 +2,17 @@ package comment
 
 // GetComment is a struct that contains the data for new social media
 type GetComment struct {
-	PhotoID int `json:"photo_id" gorm:"index" binding:"required"`
+	PhotoID int `json:"photo_id" gorm:"index" validate:"required"`
 }
 
 // NewComment is a struct that contains the data for new social media
 type NewComment struct {
-	UserID  int    `json:"user_id" gorm:"index" binding:"-"`
-	PhotoID int    `json:"photo_id" gorm:"index" binding:"required"`
-	Message string `json:"message" example:"message" binding:"required"`
+	UserID  int    `json:"user_id" gorm:"index" validate:"-"`
+	PhotoID int    `json:"photo_id" gorm:"index" validate:"required"`
+	Message string `json:"message" example:"message" validate:"required"`
 }
 
 // UpdateComment is a struct that contains the data for update social media
 type UpdateComment struct {
-	Message *string `json:"message,omitempty" example:"message" binding:"-"`
+	Message *string `json:"message,omitempty" example:"message" validate:"-"`
 }

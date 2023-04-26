@@ -1,12 +1,10 @@
 package comment
 
 import (
-	"errors"
-	commentDomain "hacktiv/final-project/domain/comment"
-	errorDomain "hacktiv/final-project/domain/errors"
+	commentDomain "hexagonal-fiber/domain/comment"
 
-	commentRepository "hacktiv/final-project/infrastructure/repository/postgres/comment"
-	photoRepository "hacktiv/final-project/infrastructure/repository/postgres/photo"
+	commentRepository "hexagonal-fiber/infrastructure/repository/postgres/comment"
+	photoRepository "hexagonal-fiber/infrastructure/repository/postgres/photo"
 )
 
 // Service is a struct that contains the repository implementation for comment use case
@@ -17,14 +15,14 @@ type Service struct {
 }
 
 // GetAll is a function that returns all comments
-func (s *Service) GetAll(page int64, limit int64) (*commentDomain.PaginationResultComment, error) {
+func (s *Service) GetAll(page int, limit int) (*commentDomain.PaginationComment, error) {
 
 	all, err := s.CommentRepository.GetAll(page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return &commentDomain.PaginationResultComment{
+	return &commentDomain.PaginationComment{
 		Data:       all.Data,
 		Total:      all.Total,
 		Limit:      all.Limit,
@@ -36,14 +34,14 @@ func (s *Service) GetAll(page int64, limit int64) (*commentDomain.PaginationResu
 }
 
 // UserGetAll is a function that returns all comments
-func (s *Service) UserGetAll(userId int, page int64, limit int64) (*commentDomain.PaginationResultComment, error) {
+func (s *Service) UserGetAll(userId int, page int, limit int) (*commentDomain.PaginationComment, error) {
 
 	all, err := s.CommentRepository.UserGetAll(userId, page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return &commentDomain.PaginationResultComment{
+	return &commentDomain.PaginationComment{
 		Data:       all.Data,
 		Total:      all.Total,
 		Limit:      all.Limit,
@@ -69,7 +67,7 @@ func (s *Service) Create(comment *commentDomain.NewComment) (*commentDomain.Comm
 
 	_, err := s.PhotoRepository.GetByID(comment.PhotoID)
 	if err != nil {
-		return nil, errorDomain.NewAppError(errors.New("photo not found"), errorDomain.NotFound)
+		return nil, err
 	}
 
 	commentModel := comment.ToDomainMapper()

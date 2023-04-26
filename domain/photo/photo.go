@@ -21,8 +21,8 @@ func (*Photo) TableName() string {
 	return "photos"
 }
 
-// PaginationResultPhoto is a struct that contains the pagination result for photo
-type PaginationResultPhoto struct {
+// PaginationPhoto is a struct that contains the pagination result for photo
+type PaginationPhoto struct {
 	Data       *[]Photo
 	Total      int64
 	Limit      int64

@@ -2,10 +2,14 @@ package sosmed
 
 import (
 	"encoding/json"
-	errorDomain "hacktiv/final-project/domain/errors"
-	sosmedDomain "hacktiv/final-project/domain/sosmed"
+	errorDomain "hexagonal-fiber/domain/error"
+	sosmedDomain "hexagonal-fiber/domain/sosmed"
+
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
 	"log"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
@@ -15,35 +19,34 @@ type Repository struct {
 }
 
 // GetAll Fetch all sosmed data
-func (r *Repository) GetAll(page int64, limit int64) (*sosmedDomain.PaginationResultSocialMedia, error) {
+func (r *Repository) GetAll(page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
 	var sosmeds []sosmedDomain.SocialMedia
 	var total int64
 
 	err := r.DB.Model(&sosmedDomain.SocialMedia{}).Count(&total).Error
 	if err != nil {
-		return &sosmedDomain.PaginationResultSocialMedia{}, err
+		return &sosmedDomain.PaginationSocialMedia{}, err
 	}
+
 	offset := (page - 1) * limit
-	err = r.DB.Limit(int(limit)).Offset(int(offset)).Find(&sosmeds).Error
-
-	if err != nil {
-		return &sosmedDomain.PaginationResultSocialMedia{}, err
+	if err = r.DB.Limit(limit).Offset(offset).Find(&sosmeds).Error; err != nil {
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	return &sosmedDomain.PaginationResultSocialMedia{
+	return &sosmedDomain.PaginationSocialMedia{
 		Data:       sosmedDomain.ArrayToDomainMapper(&sosmeds),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -51,35 +54,34 @@ func (r *Repository) GetAll(page int64, limit int64) (*sosmedDomain.PaginationRe
 }
 
 // UserGetAll Fetch all sosmed data
-func (r *Repository) UserGetAll(userId int, page int64, limit int64) (*sosmedDomain.PaginationResultSocialMedia, error) {
+func (r *Repository) UserGetAll(userId int, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
 	var sosmeds []sosmedDomain.SocialMedia
 	var total int64
 
 	err := r.DB.Model(&sosmedDomain.SocialMedia{}).Where("user_id = ?", userId).Count(&total).Error
 	if err != nil {
-		return &sosmedDomain.PaginationResultSocialMedia{}, err
+		return &sosmedDomain.PaginationSocialMedia{}, err
 	}
+
 	offset := (page - 1) * limit
-	err = r.DB.Limit(int(limit)).Offset(int(offset)).Find(&sosmeds).Error
-
-	if err != nil {
-		return &sosmedDomain.PaginationResultSocialMedia{}, err
+	if err = r.DB.Limit(limit).Offset(offset).Find(&sosmeds).Error; err != nil {
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	return &sosmedDomain.PaginationResultSocialMedia{
+	return &sosmedDomain.PaginationSocialMedia{
 		Data:       sosmedDomain.ArrayToDomainMapper(&sosmeds),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -94,11 +96,10 @@ func (r *Repository) GetByID(id int) (*sosmedDomain.SocialMedia, error) {
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "social media not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &sosmedDomain.SocialMedia{}, err
 	}
 
 	return &sosmed, nil
@@ -112,11 +113,10 @@ func (r *Repository) UserGetByID(id int, userId int) (*sosmedDomain.SocialMedia,
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "social media not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &sosmedDomain.SocialMedia{}, err
 	}
 
 	return &sosmed, nil
@@ -128,10 +128,10 @@ func (r *Repository) GetOneByMap(sosmedMap map[string]interface{}) (*sosmedDomai
 
 	err := r.DB.Where(sosmedMap).Limit(1).Find(&sosmed).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return nil, err
+		return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
-	return &sosmed, err
+
+	return &sosmed, nil
 }
 
 // Create ... Insert New data
@@ -145,13 +145,13 @@ func (r *Repository) Create(newSocialMedia *sosmedDomain.SocialMedia) (createdSo
 		if err != nil {
 			return
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return
 	}
 
 	createdSocialMedia = newSocialMedia
@@ -166,32 +166,28 @@ func (r *Repository) Update(id int, updateSocialMedia *sosmedDomain.SocialMedia)
 	err := r.DB.Model(&sosmed).
 		Updates(updateSocialMedia).Error
 
-	// err = config.DB.Save(sosmed).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &sosmedDomain.SocialMedia{}, err
+
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &sosmedDomain.SocialMedia{}, err
-
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-			return &sosmedDomain.SocialMedia{}, err
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
 	err = r.DB.Where("id = ?", id).First(&sosmed).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &sosmedDomain.SocialMedia{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "social media not found")
 	}
 
-	return &sosmed, err
+	return &sosmed, nil
 }
 
 // UserUpdate ... UserUpdate sosmed
@@ -203,32 +199,28 @@ func (r *Repository) UserUpdate(id int, userId int, updateSocialMedia *sosmedDom
 	err := r.DB.Model(&sosmed).
 		Updates(updateSocialMedia).Error
 
-	// err = config.DB.Save(sosmed).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &sosmedDomain.SocialMedia{}, err
+
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &sosmedDomain.SocialMedia{}, err
-
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-			return &sosmedDomain.SocialMedia{}, err
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
 	err = r.DB.Where("id = ?", id).First(&sosmed).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &sosmedDomain.SocialMedia{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "social media not found")
 	}
 
-	return &sosmed, err
+	return &sosmed, nil
 }
 
 // Delete ... Delete sosmed
@@ -237,12 +229,11 @@ func (r *Repository) Delete(id int) (err error) {
 
 	log.Println("check ", tx)
 	if tx.Error != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return
+		return fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
 
 	if tx.RowsAffected == 0 {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+		return fiber.NewError(fiber.StatusNotFound, "social media not found")
 	}
 
 	return

@@ -20,8 +20,8 @@ func (*Comment) TableName() string {
 	return "comments"
 }
 
-// PaginationResultComment is a struct that contains the pagination result for comment
-type PaginationResultComment struct {
+// PaginationComment is a struct that contains the pagination result for comment
+type PaginationComment struct {
 	Data       *[]Comment
 	Total      int64
 	Limit      int64

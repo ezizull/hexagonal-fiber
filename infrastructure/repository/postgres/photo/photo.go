@@ -2,11 +2,15 @@ package photo
 
 import (
 	"encoding/json"
-	commentDomain "hacktiv/final-project/domain/comment"
-	errorDomain "hacktiv/final-project/domain/errors"
-	photoDomain "hacktiv/final-project/domain/photo"
+	commentDomain "hexagonal-fiber/domain/comment"
+	errorDomain "hexagonal-fiber/domain/error"
+	photoDomain "hexagonal-fiber/domain/photo"
+
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
 	"log"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
@@ -16,35 +20,34 @@ type Repository struct {
 }
 
 // GetAll Fetch all photo data
-func (r *Repository) GetAll(page int64, limit int64) (*photoDomain.PaginationResultPhoto, error) {
+func (r *Repository) GetAll(page int, limit int) (*photoDomain.PaginationPhoto, error) {
 	var photos []photoDomain.Photo
 	var total int64
 
 	err := r.DB.Model(&photoDomain.Photo{}).Count(&total).Error
 	if err != nil {
-		return &photoDomain.PaginationResultPhoto{}, err
+		return nil, err
 	}
+
 	offset := (page - 1) * limit
-	err = r.DB.Limit(int(limit)).Offset(int(offset)).Find(&photos).Error
-
-	if err != nil {
-		return &photoDomain.PaginationResultPhoto{}, err
+	if err = r.DB.Limit(limit).Offset(offset).Find(&photos).Error; err != nil {
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	return &photoDomain.PaginationResultPhoto{
+	return &photoDomain.PaginationPhoto{
 		Data:       photoDomain.ArrayToDomainMapper(&photos),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -52,36 +55,34 @@ func (r *Repository) GetAll(page int64, limit int64) (*photoDomain.PaginationRes
 }
 
 // UserGetAll Fetch all photo data
-func (r *Repository) UserGetAll(userId int, page int64, limit int64) (*photoDomain.PaginationResultPhoto, error) {
+func (r *Repository) UserGetAll(userId int, page int, limit int) (*photoDomain.PaginationPhoto, error) {
 	var photos []photoDomain.Photo
 	var total int64
 
 	err := r.DB.Model(&photoDomain.Photo{}).Where("user_id = ?", userId).Count(&total).Error
 	if err != nil {
-		return &photoDomain.PaginationResultPhoto{}, err
+		return nil, err
 	}
 
 	offset := (page - 1) * limit
-
-	err = r.DB.Limit(int(limit)).Offset(int(offset)).Find(&photos).Error
-	if err != nil {
-		return &photoDomain.PaginationResultPhoto{}, err
+	if err = r.DB.Limit(limit).Offset(offset).Find(&photos).Error; err != nil {
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	return &photoDomain.PaginationResultPhoto{
+	return &photoDomain.PaginationPhoto{
 		Data:       photoDomain.ArrayToDomainMapper(&photos),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -89,43 +90,44 @@ func (r *Repository) UserGetAll(userId int, page int64, limit int64) (*photoDoma
 }
 
 // GetWithComments ... Fetch a photo with comments by id
-func (r *Repository) GetWithComments(id int, page int64, limit int64) (*photoDomain.ResponsePhotoComments, error) {
+func (r *Repository) GetWithComments(id int, page int, limit int) (*photoDomain.ResponsePhotoComments, error) {
 	var photoComments photoDomain.PhotoComment
 	var total int64
 
 	err := r.DB.Model(&commentDomain.Comment{}).Where("photo_id = ?", id).Count(&total).Error
 	if err != nil {
-		return &photoDomain.ResponsePhotoComments{}, err
+		return nil, err
 	}
 
 	offset := (page - 1) * limit
 	photoComments.ID = id
 
-	err = r.DB.Model(&photoDomain.Photo{}).Preload("Comment").Limit(int(limit)).Offset(int(offset)).First(&photoComments).Error
+	err = r.DB.Model(&photoDomain.Photo{}).Preload("Comment").Limit(limit).Offset(offset).First(&photoComments).Error
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+		case gorm.ErrRecordNotFound.Error():
+			return nil, fiber.NewError(fiber.StatusNotFound, "photo with comment not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &photoDomain.ResponsePhotoComments{}, err
+		return nil, err
 	}
 
-	numPages := (total + limit - 1) / limit
+	numPages := (total + int64(limit) - 1) / int64(limit)
 	var nextCursor, prevCursor uint
-	if page < numPages {
+	if page < int(numPages) {
 		nextCursor = uint(page + 1)
 	}
 	if page > 1 {
 		prevCursor = uint(page - 1)
 	}
 
-	comments := &commentDomain.PaginationResultComment{
+	comments := &commentDomain.PaginationComment{
 		Data:       commentDomain.ArrayToDomainMapper(&photoComments.Comment),
 		Total:      total,
-		Limit:      limit,
-		Current:    page,
+		Limit:      int64(limit),
+		Current:    int64(page),
 		NextCursor: nextCursor,
 		PrevCursor: prevCursor,
 		NumPages:   numPages,
@@ -145,11 +147,10 @@ func (r *Repository) GetByID(id int) (*photoDomain.Photo, error) {
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "photo not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &photoDomain.Photo{}, err
 	}
 
 	return &photo, nil
@@ -163,11 +164,10 @@ func (r *Repository) UserGetByID(id int, userId int) (*photoDomain.Photo, error)
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "photo not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &photoDomain.Photo{}, err
 	}
 
 	return &photo, nil
@@ -179,10 +179,9 @@ func (r *Repository) GetOneByMap(photoMap map[string]interface{}) (*photoDomain.
 
 	err := r.DB.Where(photoMap).Limit(1).Find(&photo).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return nil, err
+		return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
-	return &photo, err
+	return &photo, nil
 }
 
 // Create ... Insert New data
@@ -196,13 +195,13 @@ func (r *Repository) Create(newPhoto *photoDomain.Photo) (createdPhoto *photoDom
 		if err != nil {
 			return
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return
 	}
 
 	createdPhoto = newPhoto
@@ -217,32 +216,29 @@ func (r *Repository) Update(id int, updatePhoto *photoDomain.Photo) (*photoDomai
 	err := r.DB.Model(&photo).
 		Updates(updatePhoto).Error
 
-	// err = config.DB.Save(photo).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &photoDomain.Photo{}, err
+			return nil, err
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &photoDomain.Photo{}, err
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-			return &photoDomain.Photo{}, err
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
 	err = r.DB.Where("id = ?", id).First(&photo).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &photoDomain.Photo{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "photo not found")
 	}
 
-	return &photo, err
+	return &photo, nil
 }
 
 // UserUpdate ... UserUpdate photo
@@ -254,32 +250,29 @@ func (r *Repository) UserUpdate(id int, userId int, updatePhoto *photoDomain.Pho
 	err := r.DB.Model(&photo).
 		Updates(updatePhoto).Error
 
-	// err = config.DB.Save(photo).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &photoDomain.Photo{}, err
+			return nil, err
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &photoDomain.Photo{}, err
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-			return &photoDomain.Photo{}, err
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
 	err = r.DB.Where("id = ?", id).First(&photo).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &photoDomain.Photo{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "photo not found")
 	}
 
-	return &photo, err
+	return &photo, nil
 }
 
 // Delete ... Delete photo
@@ -288,12 +281,11 @@ func (r *Repository) Delete(id int) (err error) {
 
 	log.Println("check ", tx)
 	if tx.Error != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return
+		return fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
 
 	if tx.RowsAffected == 0 {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+		return fiber.NewError(fiber.StatusNotFound, "photo not found")
 	}
 
 	return

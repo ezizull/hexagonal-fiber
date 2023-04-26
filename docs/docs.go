@@ -112,7 +112,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/comment.PaginationResultComment"
+                            "$ref": "#/definitions/comment.PaginationComment"
                         }
                     },
                     "400": {
@@ -238,7 +238,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/photo.PaginationResultPhoto"
+                            "$ref": "#/definitions/photo.PaginationPhoto"
                         }
                     },
                     "400": {
@@ -364,7 +364,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/sosmed.PaginationResultSocialMedia"
+                            "$ref": "#/definitions/sosmed.PaginationSocialMedia"
                         }
                     },
                     "400": {
@@ -684,7 +684,7 @@ const docTemplate = `{
                 }
             }
         },
-        "comment.PaginationResultComment": {
+        "comment.PaginationComment": {
             "type": "object",
             "properties": {
                 "current": {
@@ -745,7 +745,7 @@ const docTemplate = `{
                 }
             }
         },
-        "photo.PaginationResultPhoto": {
+        "photo.PaginationPhoto": {
             "type": "object",
             "properties": {
                 "current": {
@@ -818,7 +818,7 @@ const docTemplate = `{
                     "example": "caption"
                 },
                 "comments": {
-                    "$ref": "#/definitions/comment.PaginationResultComment"
+                    "$ref": "#/definitions/comment.PaginationComment"
                 },
                 "created_at": {
                     "type": "string",
@@ -869,7 +869,7 @@ const docTemplate = `{
                 }
             }
         },
-        "sosmed.PaginationResultSocialMedia": {
+        "sosmed.PaginationSocialMedia": {
             "type": "object",
             "properties": {
                 "current": {

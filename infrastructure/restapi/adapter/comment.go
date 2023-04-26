@@ -1,10 +1,10 @@
 package adapter
 
 import (
-	commentService "hacktiv/final-project/application/usecases/comment"
-	commentRepository "hacktiv/final-project/infrastructure/repository/postgres/comment"
-	photoRepository "hacktiv/final-project/infrastructure/repository/postgres/photo"
-	commentController "hacktiv/final-project/infrastructure/restapi/controllers/comment"
+	commentService "hexagonal-fiber/application/usecases/comment"
+	commentRepository "hexagonal-fiber/infrastructure/repository/postgres/comment"
+	photoRepository "hexagonal-fiber/infrastructure/repository/postgres/photo"
+	commentController "hexagonal-fiber/infrastructure/restapi/controllers/comment"
 
 	"gorm.io/gorm"
 )

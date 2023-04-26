@@ -1,8 +1,8 @@
 package routes
 
 import (
-	photoController "hacktiv/final-project/infrastructure/restapi/controllers/photo"
-	"hacktiv/final-project/infrastructure/restapi/middlewares"
+	photoController "hexagonal-fiber/infrastructure/restapi/controllers/photo"
+	"hexagonal-fiber/infrastructure/restapi/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 )

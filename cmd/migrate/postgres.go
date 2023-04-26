@@ -2,7 +2,7 @@ package migrate
 
 import (
 	"fmt"
-	"hacktiv/final-project/infrastructure/repository/postgres"
+	"hexagonal-fiber/infrastructure/repository/postgres"
 	"os"
 
 	"github.com/spf13/cobra"

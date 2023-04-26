@@ -1,13 +1,13 @@
 package comment
 
 import (
-	commentDomain "hacktiv/final-project/domain/comment"
-	commentRepository "hacktiv/final-project/infrastructure/repository/postgres/comment"
+	commentDomain "hexagonal-fiber/domain/comment"
+	commentRepository "hexagonal-fiber/infrastructure/repository/postgres/comment"
 )
 
 type CommentTesting interface {
-	GetAll(page int64, limit int64) (*commentDomain.PaginationResultComment, error)
-	UserGetAll(userId int, page int64, limit int64) (*commentDomain.PaginationResultComment, error)
+	GetAll(page int, limit int) (*commentDomain.PaginationComment, error)
+	UserGetAll(userId int, page int, limit int) (*commentDomain.PaginationComment, error)
 	GetByID(id int) (*commentDomain.Comment, error)
 	UserGetByID(id int, userId int) (*commentDomain.Comment, error)
 	Create(comment *commentDomain.NewComment) (*commentDomain.Comment, error)

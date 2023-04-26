@@ -8,8 +8,8 @@ import (
 type ResponseUser struct {
 	ID        int        `json:"id" example:"1099"`
 	UserName  string     `json:"user" example:"BossonH"`
-	Email     string     `json:"email" example:"some@mail.com"`
-	Age       int        `json:"age" example:"1" binding:"required"`
+	Email     string     `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
+	Age       int        `json:"age" example:"1" validate:"required"`
 	CreatedAt time.Time  `json:"createdAt,omitempty" example:"2021-02-24 20:19:39" gorm:"autoCreateTime:mili"`
 	UpdatedAt time.Time  `json:"updatedAt,omitempty" example:"2021-02-24 20:19:39" gorm:"autoUpdateTime:mili"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty" example:"null"`
@@ -19,6 +19,6 @@ type ResponseUser struct {
 type ResponseUserRole struct {
 	ID       int    `json:"id" example:"1099"`
 	UserName string `json:"user" example:"BossonH"`
-	Email    string `json:"email" example:"some@mail.com"`
+	Email    string `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
 	Role     Role
 }

@@ -2,15 +2,14 @@
 package auth
 
 import (
-	"errors"
 	"time"
 
-	"hacktiv/final-project/application/security/jwt"
-	errorDomain "hacktiv/final-project/domain/errors"
-	secureDomain "hacktiv/final-project/domain/security"
-	userDomain "hacktiv/final-project/domain/user"
+	"hexagonal-fiber/application/security/jwt"
+	userDomain "hexagonal-fiber/domain/user"
 
-	userRepository "hacktiv/final-project/infrastructure/repository/postgres/user"
+	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Service is a struct that contains the repository implementation for auth use case
@@ -23,26 +22,24 @@ func (s *Service) Login(user userDomain.LoginUser) (*userDomain.SecurityAuthenti
 	userMap := map[string]interface{}{"email": user.Email}
 	userRole, err := s.UserRepository.GetWithRoleByMap(userMap)
 
-	if err != nil {
-		return &userDomain.SecurityAuthenticatedUser{}, err
-	}
-	if userRole.ID == 0 {
-		return &userDomain.SecurityAuthenticatedUser{}, errorDomain.NewAppError(errors.New("email or password does not match"), errorDomain.NotAuthorized)
+	if err != nil || userRole.ID == 0 {
+		err = fiber.NewError(fiber.StatusUnauthorized, "email or password does not match")
+		return nil, err
 	}
 
 	isAuthenticated := CheckPasswordHash(user.Password, userRole.HashPassword)
 	if !isAuthenticated {
-		err = errorDomain.NewAppError(err, errorDomain.NotAuthorized)
-		return &userDomain.SecurityAuthenticatedUser{}, errorDomain.NewAppError(errors.New("email or password does not match"), errorDomain.NotAuthorized)
+		err = fiber.NewError(fiber.StatusUnauthorized, "email or password does not match")
+		return nil, err
 	}
 
 	accessTokenClaims, err := jwt.GenerateJWTToken(userRole.ID, "access", userRole.Role.Name)
 	if err != nil {
-		return &userDomain.SecurityAuthenticatedUser{}, err
+		return nil, err
 	}
 	refreshTokenClaims, err := jwt.GenerateJWTToken(userRole.ID, "refresh", userRole.Role.Name)
 	if err != nil {
-		return &userDomain.SecurityAuthenticatedUser{}, err
+		return nil, err
 	}
 
 	return userDomain.SecAuthUserRoleMapper(userRole, &userDomain.Auth{
@@ -54,8 +51,8 @@ func (s *Service) Login(user userDomain.LoginUser) (*userDomain.SecurityAuthenti
 }
 
 // AccessTokenByRefreshToken implements the Access Token By Refresh Token use case
-func (s *Service) AccessTokenByRefreshToken(refreshToken string, oldCSRF string) (*userDomain.SecurityAuthenticatedUser, error) {
-	claimsMap, err := jwt.GetClaimsAndVerifyToken(refreshToken, "refresh", oldCSRF)
+func (s *Service) AccessTokenByRefreshToken(refreshToken string) (*userDomain.SecurityAuthenticatedUser, error) {
+	claimsMap, err := jwt.GetClaimsAndVerifyToken(refreshToken, "refresh")
 	if err != nil {
 		return nil, err
 	}
@@ -63,18 +60,13 @@ func (s *Service) AccessTokenByRefreshToken(refreshToken string, oldCSRF string)
 	userMap := map[string]interface{}{"id": claimsMap["user_id"]}
 	userRole, err := s.UserRepository.GetWithRoleByMap(userMap)
 	if err != nil || userRole.ID == 0 {
-		return nil, errorDomain.NewAppError(errors.New(errorDomain.TokenGeneratorErrorMessage), errorDomain.NotFound)
-	}
-
-	newCSRF, err := secureDomain.GenerateCSRF(32)
-	if err != nil {
-		err = errorDomain.NewAppError(errors.New(newCSRF), errorDomain.NotAuthenticated)
-		return &userDomain.SecurityAuthenticatedUser{}, errorDomain.NewAppError(errors.New("error genereate csrf"), errorDomain.NotAuthorized)
+		err = fiber.NewError(fiber.StatusNotFound, "user not found")
+		return nil, err
 	}
 
 	accessTokenClaims, err := jwt.GenerateJWTToken(userRole.ID, "access", userRole.Role.Name)
 	if err != nil {
-		return &userDomain.SecurityAuthenticatedUser{}, err
+		return nil, err
 	}
 
 	var expTime = int64(claimsMap["exp"].(float64))

@@ -1,17 +1,15 @@
 package comment
 
 import (
-	"errors"
-	"net/http"
 	"strconv"
 
-	useCaseComment "hacktiv/final-project/application/usecases/comment"
-	commentDomain "hacktiv/final-project/domain/comment"
-	errorDomain "hacktiv/final-project/domain/errors"
-	secureDomain "hacktiv/final-project/domain/security"
-	"hacktiv/final-project/infrastructure/restapi/controllers"
+	useCaseComment "hexagonal-fiber/application/usecases/comment"
+	commentDomain "hexagonal-fiber/domain/comment"
 
-	"github.com/gin-gonic/gin"
+	authConst "hexagonal-fiber/utils/constant/auth"
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Controller is a struct that contains the comment service
@@ -31,32 +29,29 @@ type Controller struct {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [post]
-func (c *Controller) NewComment(ctx *gin.Context) {
+func (c *Controller) NewComment(ctx *fiber.Ctx) (err error) {
 	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
 	var request commentDomain.NewComment
-	if err := controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	request.UserID = authData.UserID
-	err := createValidation(request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	request.UserID = authUserID
+	if err := createValidation(request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	comment, err := c.CommentService.Create(&request)
 	if err != nil {
-		_ = ctx.Error(err)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, comment)
+	return ctx.Status(fiber.StatusCreated).JSON(comment)
 }
 
 // GetAllComments godoc
@@ -64,42 +59,27 @@ func (c *Controller) NewComment(ctx *gin.Context) {
 // @Summary Get all Comments
 // @Security ApiKeyAuth
 // @Description Get all Comments on the system
-// @Success 200 {object} commentDomain.PaginationResultComment
+// @Success 200 {object} commentDomain.PaginationComment
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [get]
-func (c *Controller) GetAllComments(ctx *gin.Context) {
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
-
-	page, err := strconv.ParseInt(pageStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
+func (c *Controller) GetAllComments(ctx *fiber.Ctx) (err error) {
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
 
 	var request commentDomain.GetComment
-	if err := controllers.BindJSON(ctx, &request); err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	comments, err := c.CommentService.GetAll(page, limit)
 	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, comments)
+	return ctx.Status(fiber.StatusOK).JSON(comments)
 }
 
 // GetAllOwnComments godoc
@@ -107,38 +87,23 @@ func (c *Controller) GetAllComments(ctx *gin.Context) {
 // @Summary Get all Comments
 // @Security ApiKeyAuth
 // @Description Get all Comments on the system
-// @Success 200 {object} commentDomain.PaginationResultComment
+// @Success 200 {object} commentDomain.PaginationComment
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [get]
-func (c *Controller) GetAllOwnComments(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) GetAllOwnComments(ctx *fiber.Ctx) (err error) {
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
-	pageStr := ctx.DefaultQuery("page", "1")
-	limitStr := ctx.DefaultQuery("limit", "20")
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 20)
 
-	page, err := strconv.ParseInt(pageStr, 10, 64)
+	comments, err := c.CommentService.UserGetAll(authUserID, page, limit)
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param page is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
-	}
-	limit, err := strconv.ParseInt(limitStr, 10, 64)
-	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param limit is necessary to be an integer"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	comments, err := c.CommentService.UserGetAll(authData.UserID, page, limit)
-	if err != nil {
-		appError := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		_ = ctx.Error(appError)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, comments)
+	return ctx.Status(fiber.StatusOK).JSON(comments)
 }
 
 // GetCommentByID godoc
@@ -151,22 +116,20 @@ func (c *Controller) GetAllOwnComments(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
-func (c *Controller) GetCommentByID(ctx *gin.Context) {
-	commentID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) GetCommentByID(ctx *fiber.Ctx) (err error) {
+	commentID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("comment id is invalid"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "comment id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	comment, err := c.CommentService.GetByID(commentID)
 	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, comment)
+	return ctx.Status(fiber.StatusOK).JSON(comment)
 }
 
 // UpdateComment godoc
@@ -179,48 +142,44 @@ func (c *Controller) GetCommentByID(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
-func (c *Controller) UpdateComment(ctx *gin.Context) {
-	// Get your object from the context
-	authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func (c *Controller) UpdateComment(ctx *fiber.Ctx) (err error) {
+	authRole := ctx.Locals(authConst.AuthRole).(string)
+	authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
-	commentID, err := strconv.Atoi(ctx.Param("id"))
+	commentID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+		appError := fiber.NewError(fiber.StatusBadRequest, "comment id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
 	var request commentDomain.UpdateComment
-	err = controllers.BindJSON(ctx, &request)
-	if err != nil {
-		appError := errorDomain.NewAppError(err, errorDomain.ValidationError)
-		_ = ctx.Error(appError)
-		return
+	if err := ctx.BodyParser(&request); err != nil {
+		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	err = updateValidation(&request)
-	if err != nil {
-		_ = ctx.Error(err)
+	if err = updateValidation(&request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
 	var comment *commentDomain.Comment
 
-	if authData.Role == "admin" {
+	if authRole == "admin" {
 		comment, err = c.CommentService.Update(commentID, request)
 		if err != nil {
-			_ = ctx.Error(err)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	} else {
-		comment, err = c.CommentService.UserUpdate(commentID, authData.UserID, request)
+		comment, err = c.CommentService.UserUpdate(commentID, authUserID, request)
 		if err != nil {
-			_ = ctx.Error(err)
+			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, comment)
+	return ctx.Status(fiber.StatusOK).JSON(comment)
 }
 
 // DeleteComment godoc
@@ -233,20 +192,17 @@ func (c *Controller) UpdateComment(ctx *gin.Context) {
 // @Failure 400 {object} controllers.MessageResponse
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
-func (c *Controller) DeleteComment(ctx *gin.Context) {
-	commentID, err := strconv.Atoi(ctx.Param("id"))
+func (c *Controller) DeleteComment(ctx *fiber.Ctx) (err error) {
+	commentID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
-		appError := errorDomain.NewAppError(errors.New("param id is necessary in the url"), errorDomain.ValidationError)
-		_ = ctx.Error(appError)
+		appError := fiber.NewError(fiber.StatusBadRequest, "comment id is invalid")
+		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	}
+
+	if err = c.CommentService.Delete(commentID); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
 	}
 
-	err = c.CommentService.Delete(commentID)
-	if err != nil {
-		_ = ctx.Error(err)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "resource deleted successfully"})
-
+	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "resource deleted successfully"})
 }

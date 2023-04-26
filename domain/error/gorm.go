@@ -1,5 +1,4 @@
-// Package errors defines the domain errors used in the application.
-package errors
+package error
 
 // GormErr is a struct that contains the error number and message for Gorm errors
 type GormErr struct {

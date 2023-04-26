@@ -1,8 +1,8 @@
 package routes
 
 import (
-	userController "hacktiv/final-project/infrastructure/restapi/controllers/user"
-	"hacktiv/final-project/infrastructure/restapi/middlewares"
+	userController "hexagonal-fiber/infrastructure/restapi/controllers/user"
+	"hexagonal-fiber/infrastructure/restapi/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 )

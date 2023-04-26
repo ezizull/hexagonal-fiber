@@ -1,8 +1,8 @@
 package routes
 
 import (
-	commentController "hacktiv/final-project/infrastructure/restapi/controllers/comment"
-	"hacktiv/final-project/infrastructure/restapi/middlewares"
+	commentController "hexagonal-fiber/infrastructure/restapi/controllers/comment"
+	"hexagonal-fiber/infrastructure/restapi/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 )

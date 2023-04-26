@@ -2,25 +2,24 @@
 package middlewares
 
 import (
-	"net/http"
+	"strconv"
 
-	"hacktiv/final-project/utils/lists"
+	"hexagonal-fiber/utils/lists"
 
-	secureDomain "hacktiv/final-project/domain/security"
+	secureDomain "hexagonal-fiber/domain/security"
+
+	authConst "hexagonal-fiber/utils/constant/auth"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-// AuthJWTMiddleware is a function that validates the jwt token
-func AuthJWTMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		tokenString := c.GetHeader("Authorization")
+func AuthJWTMiddleware() fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		tokenString := ctx.Get("Authorization")
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token not provided"})
-			c.Abort()
-			return
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Token not provided"})
 		}
 
 		claims := &secureDomain.Claims{}
@@ -29,34 +28,34 @@ func AuthJWTMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
 		}
 
-		c.Set("Authorized", *claims)
-		c.Next()
+		ctx.Set(authConst.AuthRole, claims.Role)
+		ctx.Set(authConst.AuthUserID, strconv.Itoa(claims.UserID))
+
+		return ctx.Next()
 	}
 }
 
 // AuthRoleMiddleware is a function that validates the role of user
 func AuthRoleMiddleware(validRoles []string) gin.HandlerFunc {
-	return func(c *gin.Context) {
+	return func(ctx *gin.Context) {
 		// Get your object from the context
-		authData := c.MustGet("Authorized").(secureDomain.Claims)
+		authData := ctx.MustGet("Authorized").(secureDomain.Claims)
 
 		if authData.Role == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-			c.Abort()
+			ctx.JSON(fiber.StatusUnauthorized, gin.H{"error": "You are not authorized"})
+			ctx.Abort()
 			return
 		}
 
 		if !lists.Contains(validRoles, authData.Role) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized for this path"})
-			c.Abort()
+			ctx.JSON(fiber.StatusUnauthorized, gin.H{"error": "You are not authorized for this path"})
+			ctx.Abort()
 			return
 		}
 
-		c.Next()
+		ctx.Next()
 	}
 }

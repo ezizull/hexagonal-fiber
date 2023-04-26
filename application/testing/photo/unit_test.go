@@ -3,11 +3,11 @@ package photo
 // import (
 // 	"testing"
 
-// 	"hacktiv/final-project/application/mocks"
-// 	photoUsecase "hacktiv/final-project/application/usecases/photo"
+// 	"hexagonal-fiber/application/mocks"
+// 	photoUsecase "hexagonal-fiber/application/usecases/photo"
 
-// 	errorDomain "hacktiv/final-project/domain/errors"
-// 	photoDomain "hacktiv/final-project/domain/photo"
+// 	errorDomain "hexagonal-fiber/domain/error"
+// 	photoDomain "hexagonal-fiber/domain/photo"
 
 // 	"github.com/stretchr/testify/suite"
 // )
@@ -31,7 +31,7 @@ package photo
 // }
 
 // func (uts *UnitTestSuite) TestGetAll() {
-// 	uts.photoMock.On("GetAll", 1, 20).Return([]*photoDomain.PaginationResultPhoto{}, nil)
+// 	uts.photoMock.On("GetAll", 1, 20).Return([]*photoDomain.PaginationPhoto{}, nil)
 
 // 	actual, err := uts.photo.GetAll(1, 20)
 

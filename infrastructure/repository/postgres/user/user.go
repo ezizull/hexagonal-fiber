@@ -4,8 +4,12 @@ package user
 import (
 	"encoding/json"
 
-	errorDomain "hacktiv/final-project/domain/errors"
-	userDomain "hacktiv/final-project/domain/user"
+	errorDomain "hexagonal-fiber/domain/error"
+	userDomain "hexagonal-fiber/domain/user"
+
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 
 	"gorm.io/gorm"
 )
@@ -20,11 +24,10 @@ func (r *Repository) GetAll() (*[]userDomain.User, error) {
 	var users []userDomain.User
 	err := r.DB.Find(&users).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return nil, err
+		return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
 
-	return &users, err
+	return &users, nil
 }
 
 // Create ... Insert New data
@@ -36,15 +39,14 @@ func (r *Repository) Create(newUser *userDomain.User) (*userDomain.User, error) 
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &userDomain.User{}, err
+			return nil, err
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
-			return &userDomain.User{}, err
-
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 	return newUser, err
@@ -56,8 +58,7 @@ func (r *Repository) GetOneByMap(userMap map[string]interface{}) (*userDomain.Us
 
 	tx := r.DB.Where(userMap).Limit(1).Find(&userRepository)
 	if tx.Error != nil {
-		err := errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return &userDomain.User{}, err
+		return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
 	return &userRepository, nil
 }
@@ -70,9 +71,9 @@ func (r *Repository) GetWithRoleByMap(userMap map[string]interface{}) (*userDoma
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "user not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
@@ -87,9 +88,9 @@ func (r *Repository) GetWithRole(id int) (*userDomain.UserRole, error) {
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "user not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
@@ -104,9 +105,9 @@ func (r *Repository) GetByID(id int) (*userDomain.User, error) {
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "user not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 
@@ -121,28 +122,28 @@ func (r *Repository) Update(id int, updateUser *userDomain.User) (*userDomain.Us
 	err := r.DB.Model(&user).
 		Updates(updateUser).Error
 
-	// err = config.DB.Save(user).Error
 	if err != nil {
 		byteErr, _ := json.Marshal(err)
 		var newError errorDomain.GormErr
 		err = json.Unmarshal(byteErr, &newError)
 		if err != nil {
-			return &userDomain.User{}, err
+			return nil, err
 		}
+
 		switch newError.Number {
 		case 1062:
-			err = errorDomain.NewAppErrorWithType(errorDomain.ResourceAlreadyExists)
+			return nil, fiber.NewError(fiber.StatusConflict, mssgConst.ResourceAlreadyExists)
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-		return &userDomain.User{}, err
+
+		return nil, err
 
 	}
 
 	err = r.DB.Where("id = ?", id).First(&user).Error
 	if err != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
-		return &userDomain.User{}, err
+		return nil, fiber.NewError(fiber.StatusNotFound, "user not found")
 	}
 
 	return &user, err
@@ -152,12 +153,11 @@ func (r *Repository) Update(id int, updateUser *userDomain.User) (*userDomain.Us
 func (r *Repository) Delete(id int) (err error) {
 	tx := r.DB.Delete(&userDomain.User{}, id)
 	if tx.Error != nil {
-		err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
-		return
+		return fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}
 
 	if tx.RowsAffected == 0 {
-		err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+		return fiber.NewError(fiber.StatusNotFound, "user not found")
 	}
 
 	return

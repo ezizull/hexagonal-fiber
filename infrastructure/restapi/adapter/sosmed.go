@@ -1,9 +1,9 @@
 package adapter
 
 import (
-	sosmedService "hacktiv/final-project/application/usecases/sosmed"
-	sosmedRepository "hacktiv/final-project/infrastructure/repository/postgres/sosmed"
-	sosmedController "hacktiv/final-project/infrastructure/restapi/controllers/sosmed"
+	sosmedService "hexagonal-fiber/application/usecases/sosmed"
+	sosmedRepository "hexagonal-fiber/infrastructure/repository/postgres/sosmed"
+	sosmedController "hexagonal-fiber/infrastructure/restapi/controllers/sosmed"
 
 	"gorm.io/gorm"
 )

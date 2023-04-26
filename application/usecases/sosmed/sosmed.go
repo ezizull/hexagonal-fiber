@@ -1,9 +1,9 @@
 package sosmed
 
 import (
-	sosmedDomain "hacktiv/final-project/domain/sosmed"
+	sosmedDomain "hexagonal-fiber/domain/sosmed"
 
-	sosmedRepository "hacktiv/final-project/infrastructure/repository/postgres/sosmed"
+	sosmedRepository "hexagonal-fiber/infrastructure/repository/postgres/sosmed"
 )
 
 // Service is a struct that contains the repository implementation for sosmed use case
@@ -13,14 +13,14 @@ type Service struct {
 }
 
 // GetAll is a function that returns all sosmeds
-func (s *Service) GetAll(page int64, limit int64) (*sosmedDomain.PaginationResultSocialMedia, error) {
+func (s *Service) GetAll(page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
 
 	all, err := s.SocialMediaRepository.GetAll(page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return &sosmedDomain.PaginationResultSocialMedia{
+	return &sosmedDomain.PaginationSocialMedia{
 		Data:       all.Data,
 		Total:      all.Total,
 		Limit:      all.Limit,
@@ -32,14 +32,14 @@ func (s *Service) GetAll(page int64, limit int64) (*sosmedDomain.PaginationResul
 }
 
 // UserGetAll is a function that returns all sosmeds
-func (s *Service) UserGetAll(userId int, page int64, limit int64) (*sosmedDomain.PaginationResultSocialMedia, error) {
+func (s *Service) UserGetAll(userId int, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
 
 	all, err := s.SocialMediaRepository.UserGetAll(userId, page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return &sosmedDomain.PaginationResultSocialMedia{
+	return &sosmedDomain.PaginationSocialMedia{
 		Data:       all.Data,
 		Total:      all.Total,
 		Limit:      all.Limit,

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"hacktiv/final-project/cmd/migrate"
+	"hexagonal-fiber/cmd/migrate"
 	"os"
 
 	"github.com/spf13/cobra"

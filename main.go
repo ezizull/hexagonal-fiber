@@ -2,27 +2,33 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"hacktiv/final-project/cmd"
-	secureDomain "hacktiv/final-project/domain/security"
-	"hacktiv/final-project/infrastructure/repository/postgres"
-	errorsController "hacktiv/final-project/infrastructure/restapi/controllers/errors"
-	"net/http"
+	"hexagonal-fiber/cmd"
+	secureDomain "hexagonal-fiber/domain/security"
+	"hexagonal-fiber/infrastructure/repository/postgres"
+
+	"log"
 	"os"
 	"strings"
 	"time"
 
 	limit "github.com/aviddiviner/gin-limit"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
+	"github.com/valyala/fasthttp"
 
-	"hacktiv/final-project/infrastructure/restapi/routes"
+	"hexagonal-fiber/infrastructure/restapi/routes"
 )
 
+// main services
 func main() {
 
-	router := gin.Default()
+	router := fiber.New(fiber.Config{
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
+	})
 	router.Use(limit.MaxAllowed(200))
 	router.Use(cors.Default())
 
@@ -35,8 +41,6 @@ func main() {
 
 	// commands handler
 	cmd.Execute(postgresDB)
-
-	router.Use(errorsController.Handler)
 
 	// getting key ssh
 	err = secureDomain.GettingKeySSH()
@@ -54,34 +58,30 @@ func main() {
 	startServer(router)
 }
 
-func startServer(router *gin.Engine) {
+// start server config
+func startServer(app *fiber.App) {
 	viper.SetConfigFile("config.json")
 	if err := viper.ReadInConfig(); err != nil {
-		_ = fmt.Errorf("fatal error in config file: %s", err.Error())
-		panic(err)
-
+		log.Fatalf("fatal error in config file: %s", err.Error())
 	}
 
 	// check environment
 	environment := os.Getenv("ENV")
 	if environment == "railway-production" {
-		router.Run()
+		log.Fatal(app.Listen(":8080"))
 
 	} else {
 		serverPort := fmt.Sprintf(":%s", viper.GetString("ServerPort"))
-		s := &http.Server{
-			Addr:           serverPort,
-			Handler:        router,
-			ReadTimeout:    18000 * time.Second,
-			WriteTimeout:   18000 * time.Second,
-			MaxHeaderBytes: 1000 << 20,
+
+		s := &fasthttp.Server{
+			Handler:            app.Handler(),
+			ReadTimeout:        18000 * time.Second,
+			WriteTimeout:       18000 * time.Second,
+			MaxRequestBodySize: 1000 << 20,
 		}
 
-		if err := s.ListenAndServe(); err != nil {
-			_ = fmt.Errorf("fatal error description: %s", strings.ToLower(err.Error()))
-			panic(err)
+		if err := s.ListenAndServe(serverPort); err != nil {
+			log.Fatalf("fatal error description: %s", strings.ToLower(err.Error()))
 		}
-
 	}
-
 }

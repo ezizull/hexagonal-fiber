@@ -1,6 +1,6 @@
 package photo
 
-import commentDomain "hacktiv/final-project/domain/comment"
+import commentDomain "hexagonal-fiber/domain/comment"
 
 // PhotoComment is a struct that contains role of user
 type PhotoComment struct {

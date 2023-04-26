@@ -1,10 +1,10 @@
 package adapter
 
 import (
-	userService "hacktiv/final-project/application/usecases/user"
-	roleRepository "hacktiv/final-project/infrastructure/repository/postgres/role"
-	userRepository "hacktiv/final-project/infrastructure/repository/postgres/user"
-	userController "hacktiv/final-project/infrastructure/restapi/controllers/user"
+	userService "hexagonal-fiber/application/usecases/user"
+	roleRepository "hexagonal-fiber/infrastructure/repository/postgres/role"
+	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
+	userController "hexagonal-fiber/infrastructure/restapi/controllers/user"
 
 	"gorm.io/gorm"
 )

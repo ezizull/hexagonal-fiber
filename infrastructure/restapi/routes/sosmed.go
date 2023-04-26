@@ -1,8 +1,8 @@
 package routes
 
 import (
-	sosmedController "hacktiv/final-project/infrastructure/restapi/controllers/sosmed"
-	"hacktiv/final-project/infrastructure/restapi/middlewares"
+	sosmedController "hexagonal-fiber/infrastructure/restapi/controllers/sosmed"
+	"hexagonal-fiber/infrastructure/restapi/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 )

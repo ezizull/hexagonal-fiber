@@ -3,10 +3,10 @@ package postgres
 
 import (
 	"fmt"
-	commentDomain "hacktiv/final-project/domain/comment"
-	photoDomain "hacktiv/final-project/domain/photo"
-	sosmedDomain "hacktiv/final-project/domain/sosmed"
-	userDomain "hacktiv/final-project/domain/user"
+	commentDomain "hexagonal-fiber/domain/comment"
+	photoDomain "hexagonal-fiber/domain/photo"
+	sosmedDomain "hexagonal-fiber/domain/sosmed"
+	userDomain "hexagonal-fiber/domain/user"
 	"log"
 	"os"
 	"time"

@@ -1,9 +1,9 @@
 package photo
 
-import commentDomain "hacktiv/final-project/domain/comment"
+import commentDomain "hexagonal-fiber/domain/comment"
 
 // ResponsePhotoComments is a struct that contains the response body for the photo comments
 type ResponsePhotoComments struct {
 	Photo
-	Comments commentDomain.PaginationResultComment
+	Comments commentDomain.PaginationComment
 }

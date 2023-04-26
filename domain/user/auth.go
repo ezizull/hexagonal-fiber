@@ -18,7 +18,7 @@ type Auth struct {
 type DataUserAuthenticated struct {
 	ID       int    `json:"id" example:"123"`
 	UserName string `json:"userName" example:"UserName" gorm:"unique"`
-	Email    string `json:"email" example:"some@mail.com" gorm:"unique"`
+	Email    string `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
 	RoleID   string `json:"role_id" example:"admin"`
 	Role     Role
 }

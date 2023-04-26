@@ -2,9 +2,9 @@
 package adapter
 
 import (
-	photoService "hacktiv/final-project/application/usecases/photo"
-	photoRepository "hacktiv/final-project/infrastructure/repository/postgres/photo"
-	photoController "hacktiv/final-project/infrastructure/restapi/controllers/photo"
+	photoService "hexagonal-fiber/application/usecases/photo"
+	photoRepository "hexagonal-fiber/infrastructure/repository/postgres/photo"
+	photoController "hexagonal-fiber/infrastructure/restapi/controllers/photo"
 
 	"gorm.io/gorm"
 )

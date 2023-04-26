@@ -3,9 +3,9 @@ package photo
 import (
 	"testing"
 
-	photoUsecase "hacktiv/final-project/application/usecases/photo"
-	errorDomain "hacktiv/final-project/domain/errors"
-	photoRepository "hacktiv/final-project/infrastructure/repository/postgres/photo"
+	photoUsecase "hexagonal-fiber/application/usecases/photo"
+	photoRepository "hexagonal-fiber/infrastructure/repository/postgres/photo"
+	mssgConst "hexagonal-fiber/utils/constant/message"
 
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
@@ -70,7 +70,7 @@ func (its *IntTestSuite) TestGetByID() {
 func (its *IntTestSuite) TestGetByID_Error() {
 	actual, err := its.photoCase.GetByID(0)
 
-	its.EqualError(err, errorDomain.NotFoundMessage)
+	its.EqualError(err, mssgConst.StatusNotFound)
 	its.Equal(uint(0), actual.ID)
 
 }

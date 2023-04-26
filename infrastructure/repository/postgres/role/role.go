@@ -1,9 +1,11 @@
 package role
 
 import (
-	errorDomain "hacktiv/final-project/domain/errors"
-	domainRole "hacktiv/final-project/domain/user"
+	domainRole "hexagonal-fiber/domain/user"
 
+	mssgConst "hexagonal-fiber/utils/constant/message"
+
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
@@ -20,9 +22,9 @@ func (r *Repository) GetByID(id string) (*domainRole.Role, error) {
 	if err != nil {
 		switch err.Error() {
 		case gorm.ErrRecordNotFound.Error():
-			err = errorDomain.NewAppErrorWithType(errorDomain.NotFound)
+			return nil, fiber.NewError(fiber.StatusNotFound, "role not found")
 		default:
-			err = errorDomain.NewAppErrorWithType(errorDomain.UnknownError)
+			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
 	}
 

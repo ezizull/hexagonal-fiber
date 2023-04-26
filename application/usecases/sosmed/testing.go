@@ -1,13 +1,13 @@
 package sosmed
 
 import (
-	sosmedDomain "hacktiv/final-project/domain/sosmed"
-	sosmedRepository "hacktiv/final-project/infrastructure/repository/postgres/sosmed"
+	sosmedDomain "hexagonal-fiber/domain/sosmed"
+	sosmedRepository "hexagonal-fiber/infrastructure/repository/postgres/sosmed"
 )
 
 type SocialMediaTesting interface {
-	GetAll(page int64, limit int64) (*sosmedDomain.PaginationResultSocialMedia, error)
-	UserGetAll(userId int, page int64, limit int64) (*sosmedDomain.PaginationResultSocialMedia, error)
+	GetAll(page int, limit int) (*sosmedDomain.PaginationSocialMedia, error)
+	UserGetAll(userId int, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error)
 	GetByID(id int) (*sosmedDomain.SocialMedia, error)
 	UserGetByID(id int, userId int) (*sosmedDomain.SocialMedia, error)
 	Create(sosmed *sosmedDomain.NewSocialMedia) (*sosmedDomain.SocialMedia, error)
