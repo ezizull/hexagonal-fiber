@@ -1,0 +1,704 @@
+definitions:
+  auth.AccessTokenRequest:
+    properties:
+      refreshToken:
+        example: badbunybabybebe
+        type: string
+    required:
+    - refreshToken
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
+        example: mail@mail.com
+        type: string
+      password:
+        example: Password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  comment.Comment:
+    properties:
+      created_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      deleted_at:
+        example: "null"
+        type: string
+      id:
+        example: 1099
+        type: integer
+      message:
+        example: caption
+        type: string
+      photo_id:
+        type: integer
+      updated_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      user_id:
+        type: integer
+    type: object
+  comment.NewComment:
+    properties:
+      message:
+        example: message
+        type: string
+      photo_id:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - message
+    - photo_id
+    type: object
+  comment.PaginationResultComment:
+    properties:
+      current:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/comment.Comment'
+        type: array
+      limit:
+        type: integer
+      nextCursor:
+        type: integer
+      numPages:
+        type: integer
+      prevCursor:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controllers.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  photo.NewPhoto:
+    properties:
+      caption:
+        example: caption
+        type: string
+      photo_url:
+        example: www.photo.com
+        type: string
+      title:
+        example: title
+        type: string
+      user_id:
+        type: integer
+    required:
+    - photo_url
+    - title
+    type: object
+  photo.PaginationResultPhoto:
+    properties:
+      current:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/photo.Photo'
+        type: array
+      limit:
+        type: integer
+      nextCursor:
+        type: integer
+      numPages:
+        type: integer
+      prevCursor:
+        type: integer
+      total:
+        type: integer
+    type: object
+  photo.Photo:
+    properties:
+      caption:
+        example: caption
+        type: string
+      created_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      deleted_at:
+        example: "null"
+        type: string
+      id:
+        example: 1099
+        type: integer
+      photo_url:
+        example: www.photo.com
+        type: string
+      title:
+        example: title
+        type: string
+      updated_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      user_id:
+        type: integer
+    type: object
+  photo.ResponsePhotoComments:
+    properties:
+      caption:
+        example: caption
+        type: string
+      comments:
+        $ref: '#/definitions/comment.PaginationResultComment'
+      created_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      deleted_at:
+        example: "null"
+        type: string
+      id:
+        example: 1099
+        type: integer
+      photo_url:
+        example: www.photo.com
+        type: string
+      title:
+        example: title
+        type: string
+      updated_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      user_id:
+        type: integer
+    type: object
+  sosmed.NewSocialMedia:
+    properties:
+      name:
+        example: name
+        type: string
+      social_media_url:
+        example: www.sosmed.com
+        type: string
+      user_id:
+        type: integer
+    required:
+    - name
+    - social_media_url
+    type: object
+  sosmed.PaginationResultSocialMedia:
+    properties:
+      current:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/sosmed.SocialMedia'
+        type: array
+      limit:
+        type: integer
+      nextCursor:
+        type: integer
+      numPages:
+        type: integer
+      prevCursor:
+        type: integer
+      total:
+        type: integer
+    type: object
+  sosmed.SocialMedia:
+    properties:
+      created_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      deleted_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      id:
+        example: 1099
+        type: integer
+      name:
+        example: caption
+        type: string
+      social_media_url:
+        example: www.sosmed.com
+        type: string
+      updated_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      user_id:
+        type: integer
+    type: object
+  user.DataSecurityAuthenticated:
+    properties:
+      expirationAccessDateTime:
+        example: "2023-02-02T21:03:53.196419-06:00"
+        type: string
+      expirationRefreshDateTime:
+        example: "2023-02-03T06:53:53.196419-06:00"
+        type: string
+      jwtAccessToken:
+        example: SomeAccessToken
+        type: string
+      jwtRefreshToken:
+        example: SomeRefreshToken
+        type: string
+    type: object
+  user.DataUserAuthenticated:
+    properties:
+      email:
+        example: some@mail.com
+        type: string
+      id:
+        example: 123
+        type: integer
+      role:
+        $ref: '#/definitions/user.Role'
+      role_id:
+        example: admin
+        type: string
+      userName:
+        example: UserName
+        type: string
+    type: object
+  user.NewUser:
+    properties:
+      age:
+        example: 1
+        type: integer
+      email:
+        example: mail@mail.com
+        type: string
+      password:
+        example: Password123
+        type: string
+      role_id:
+        type: string
+      username:
+        example: someUser
+        type: string
+    required:
+    - age
+    - email
+    - password
+    - role_id
+    - username
+    type: object
+  user.ResponseUser:
+    properties:
+      age:
+        example: 1
+        type: integer
+      createdAt:
+        example: "2021-02-24 20:19:39"
+        type: string
+      deleted_at:
+        example: "null"
+        type: string
+      email:
+        example: some@mail.com
+        type: string
+      id:
+        example: 1099
+        type: integer
+      updatedAt:
+        example: "2021-02-24 20:19:39"
+        type: string
+      user:
+        example: BossonH
+        type: string
+    required:
+    - age
+    type: object
+  user.Role:
+    properties:
+      created_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+      deleted_at:
+        example: "null"
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        example: "2021-02-24 20:19:39"
+        type: string
+    type: object
+  user.SecurityAuthenticatedUser:
+    properties:
+      data:
+        $ref: '#/definitions/user.DataUserAuthenticated'
+      security:
+        $ref: '#/definitions/user.DataSecurityAuthenticated'
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/access-token:
+    post:
+      description: Auth user by email and password
+      parameters:
+      - description: body data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/auth.AccessTokenRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.SecurityAuthenticatedUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      summary: GetAccessTokenByRefreshToken UserName
+      tags:
+      - auth
+  /auth/login:
+    post:
+      description: Auth user by email and password
+      parameters:
+      - description: body data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.SecurityAuthenticatedUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      summary: Login UserName
+      tags:
+      - auth
+  /comment:
+    get:
+      description: Get all Comments on the system
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comment.PaginationResultComment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all Comments
+      tags:
+      - comment
+    post:
+      consumes:
+      - application/json
+      description: Create new comment on the system
+      parameters:
+      - description: body data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/comment.NewComment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comment.Comment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create New CommentName
+      tags:
+      - comment
+  /comment/{comment_id}:
+    get:
+      description: Get Comments by ID on the system
+      parameters:
+      - description: id of comment
+        in: path
+        name: comment_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get comments by ID
+      tags:
+      - comment
+  /photo:
+    get:
+      description: Get all Photos on the system
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/photo.PaginationResultPhoto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all Photos
+      tags:
+      - photo
+    post:
+      consumes:
+      - application/json
+      description: Create new photo on the system
+      parameters:
+      - description: body data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/photo.NewPhoto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/photo.Photo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create New PhotoName
+      tags:
+      - photo
+  /photo/{photo_id}:
+    get:
+      description: Get Photos by ID on the system
+      parameters:
+      - description: id of photo
+        in: path
+        name: photo_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get photos by ID
+      tags:
+      - photo
+  /sosmed:
+    get:
+      description: Get all SocialMedia on the system
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sosmed.PaginationResultSocialMedia'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all SocialMedia
+      tags:
+      - sosmed
+    post:
+      consumes:
+      - application/json
+      description: Create new sosmed on the system
+      parameters:
+      - description: body data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/sosmed.NewSocialMedia'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sosmed.SocialMedia'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create New SocialMediaName
+      tags:
+      - sosmed
+  /sosmed/{sosmed_id}:
+    get:
+      description: Get SocialMedia by ID on the system
+      parameters:
+      - description: id of sosmed
+        in: path
+        name: sosmed_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get sosmeds by ID
+      tags:
+      - sosmed
+  /user:
+    get:
+      description: Get all Users on the system
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.ResponseUser'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all Users
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Create new user on the system
+      parameters:
+      - description: body data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.NewUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.ResponseUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create New UserName
+      tags:
+      - user
+  /user/{user_id}:
+    get:
+      description: Get Users by ID on the system
+      parameters:
+      - description: id of user
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.MessageResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get users by ID
+      tags:
+      - user
+swagger: "2.0"

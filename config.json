@@ -1,0 +1,56 @@
+{
+  "Environment": "development",
+  "ServerPort": 4000,
+  "Secure": {
+    "JWTAccessSecure": "accesskeyyoumayneedtochangeit",
+    "JWTRefreshSecure": "refreshkeyyoumayneedtochangeit",
+    "JWTAccessTimeMinute": 10,
+    "JWTRefreshTimeHour": 10
+  },
+  "Databases": {
+    "PostgreSQL": {
+      "Localhost": {
+        "Read": {
+          "Hostname": "localhost",
+          "Name": "hacktiv_final",
+          "Username": "root",
+          "Password": "root",
+          "Port": "5432",
+          "Parameter": "?parseTime=true",
+          "Timezone": "Asia/Jakarta"
+        },
+        "Write": {
+          "Hostname": "localhost",
+          "Name": "hacktiv_final",
+          "Username": "root",
+          "Password": "root",
+          "Port": "5432",
+          "Parameter": "?parseTime=true",
+          "Timezone": "Asia/Jakarta"
+        }
+      }
+    },
+    "MySQL": {
+      "Localhost": {
+        "Read": {
+          "Hostname": "localhost",
+          "Name": "hacktiv_final",
+          "Username": "root",
+          "Password": "root",
+          "Port": "3306",
+          "Parameter": "?parseTime=true",
+          "Timezone": "Asia/Jakarta"
+        },
+        "Write": {
+          "Hostname": "localhost",
+          "Name": "hacktiv_final",
+          "Username": "root",
+          "Password": "root",
+          "Port": "3306",
+          "Parameter": "?parseTime=true",
+          "Timezone": "Asia/Jakarta"
+        }
+      }
+    }
+  }
+}
