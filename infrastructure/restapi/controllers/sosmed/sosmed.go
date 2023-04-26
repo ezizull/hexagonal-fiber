@@ -7,6 +7,8 @@ import (
 	useCaseSosmed "hexagonal-fiber/application/usecases/sosmed"
 	sosmedDomain "hexagonal-fiber/domain/sosmed"
 
+	secureDomain "hexagonal-fiber/domain/security"
+
 	authConst "hexagonal-fiber/utils/constant/auth"
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
@@ -31,7 +33,7 @@ type Controller struct {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed [post]
 func (c *Controller) NewSocialMedia(ctx *fiber.Ctx) (err error) {
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	var request sosmedDomain.NewSocialMedia
 	if err := ctx.BodyParser(&request); err != nil {
@@ -39,7 +41,7 @@ func (c *Controller) NewSocialMedia(ctx *fiber.Ctx) (err error) {
 		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	request.UserID = authUserID
+	request.UserID = authData.UserID
 	if err = createValidation(request); err != nil {
 		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
 		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
@@ -86,12 +88,12 @@ func (c *Controller) GetAllSocialMedia(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed [get]
 func (c *Controller) GetAllOwnSocialMedia(ctx *fiber.Ctx) (err error) {
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 20)
 
-	sosmeds, err := c.SocialMediaService.UserGetAll(authUserID, page, limit)
+	sosmeds, err := c.SocialMediaService.UserGetAll(authData.UserID, page, limit)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
@@ -137,8 +139,7 @@ func (c *Controller) GetSocialMediaByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed/{sosmed_id} [get]
 func (c *Controller) UpdateSocialMedia(ctx *fiber.Ctx) (err error) {
-	authRole := ctx.Locals(authConst.AuthRole).(string)
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	sosmedID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
@@ -159,14 +160,14 @@ func (c *Controller) UpdateSocialMedia(ctx *fiber.Ctx) (err error) {
 
 	var sosmed *sosmedDomain.SocialMedia
 
-	if authRole == "admin" {
+	if authData.Role == "admin" {
 		sosmed, err = c.SocialMediaService.Update(sosmedID, request)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	} else {
-		sosmed, err = c.SocialMediaService.UserUpdate(sosmedID, authUserID, request)
+		sosmed, err = c.SocialMediaService.UserUpdate(sosmedID, authData.UserID, request)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return

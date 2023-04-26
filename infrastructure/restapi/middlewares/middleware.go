@@ -2,8 +2,6 @@
 package middlewares
 
 import (
-	"strconv"
-
 	"hexagonal-fiber/utils/lists"
 
 	secureDomain "hexagonal-fiber/domain/security"
@@ -11,7 +9,6 @@ import (
 	authConst "hexagonal-fiber/utils/constant/auth"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -31,31 +28,25 @@ func AuthJWTMiddleware() fiber.Handler {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
 		}
 
-		ctx.Set(authConst.AuthRole, claims.Role)
-		ctx.Set(authConst.AuthUserID, strconv.Itoa(claims.UserID))
+		ctx.Locals(authConst.Authorized, claims)
 
 		return ctx.Next()
 	}
 }
 
 // AuthRoleMiddleware is a function that validates the role of user
-func AuthRoleMiddleware(validRoles []string) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		// Get your object from the context
-		authData := ctx.MustGet("Authorized").(secureDomain.Claims)
+func AuthRoleMiddleware(validRoles []string) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 		if authData.Role == "" {
-			ctx.JSON(fiber.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-			ctx.Abort()
-			return
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "You are not authorized"})
 		}
 
 		if !lists.Contains(validRoles, authData.Role) {
-			ctx.JSON(fiber.StatusUnauthorized, gin.H{"error": "You are not authorized for this path"})
-			ctx.Abort()
-			return
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "You are not authorized for this path"})
 		}
 
-		ctx.Next()
+		return ctx.Next()
 	}
 }

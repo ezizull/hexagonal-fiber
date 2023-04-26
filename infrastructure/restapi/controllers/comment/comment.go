@@ -5,6 +5,7 @@ import (
 
 	useCaseComment "hexagonal-fiber/application/usecases/comment"
 	commentDomain "hexagonal-fiber/domain/comment"
+	secureDomain "hexagonal-fiber/domain/security"
 
 	authConst "hexagonal-fiber/utils/constant/auth"
 	mssgConst "hexagonal-fiber/utils/constant/message"
@@ -30,8 +31,7 @@ type Controller struct {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [post]
 func (c *Controller) NewComment(ctx *fiber.Ctx) (err error) {
-	// Get your object from the context
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	var request commentDomain.NewComment
 	if err := ctx.BodyParser(&request); err != nil {
@@ -39,7 +39,7 @@ func (c *Controller) NewComment(ctx *fiber.Ctx) (err error) {
 		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	request.UserID = authUserID
+	request.UserID = authData.UserID
 	if err := createValidation(request); err != nil {
 		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
 		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
@@ -92,12 +92,12 @@ func (c *Controller) GetAllComments(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [get]
 func (c *Controller) GetAllOwnComments(ctx *fiber.Ctx) (err error) {
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 20)
 
-	comments, err := c.CommentService.UserGetAll(authUserID, page, limit)
+	comments, err := c.CommentService.UserGetAll(authData.UserID, page, limit)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
@@ -143,8 +143,7 @@ func (c *Controller) GetCommentByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
 func (c *Controller) UpdateComment(ctx *fiber.Ctx) (err error) {
-	authRole := ctx.Locals(authConst.AuthRole).(string)
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	commentID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
@@ -165,14 +164,14 @@ func (c *Controller) UpdateComment(ctx *fiber.Ctx) (err error) {
 
 	var comment *commentDomain.Comment
 
-	if authRole == "admin" {
+	if authData.Role == "admin" {
 		comment, err = c.CommentService.Update(commentID, request)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	} else {
-		comment, err = c.CommentService.UserUpdate(commentID, authUserID, request)
+		comment, err = c.CommentService.UserUpdate(commentID, authData.UserID, request)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return

@@ -7,6 +7,7 @@ import (
 	"hexagonal-fiber/infrastructure/restapi/adapter"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
 
 	"gorm.io/gorm"
@@ -19,6 +20,11 @@ type Security struct {
 }
 
 func ApplicationRootRouter(router fiber.Router, db *gorm.DB) {
+	// Monitoring
+	{
+		router.Get("/metrics", monitor.New())
+	}
+
 	// Documentation Swagger
 	{
 		router.Get("/swagger/*any", fiberSwagger.WrapHandler)

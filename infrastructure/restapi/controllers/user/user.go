@@ -7,6 +7,8 @@ import (
 	useCaseUser "hexagonal-fiber/application/usecases/user"
 	userDomain "hexagonal-fiber/domain/user"
 
+	secureDomain "hexagonal-fiber/domain/security"
+
 	authConst "hexagonal-fiber/utils/constant/auth"
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
@@ -82,9 +84,9 @@ func (c *Controller) GetAllUsers(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
 func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
-	authRole := ctx.Locals(authConst.AuthRole).(string)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
-	if authRole == "admin" {
+	if authData.Role == "admin" {
 		var userID int
 		userID, err = strconv.Atoi(ctx.Params("id"))
 		if err != nil {
@@ -104,9 +106,8 @@ func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
 
 	} else {
 		var userRole *userDomain.ResponseUserRole
-		authUserID := ctx.Locals(authConst.AuthUserID).(int)
 
-		userRole, err = c.UserService.GetWithRole(authUserID)
+		userRole, err = c.UserService.GetWithRole(authData.UserID)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
@@ -129,10 +130,17 @@ func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
 func (c *Controller) UpdateUser(ctx *fiber.Ctx) (err error) {
-	userID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+
+	var userID int
+	if authData.Role == "admin" {
+		userID, err = strconv.Atoi(ctx.Params("id"))
+		if err != nil {
+			appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
+			return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+		}
+	} else {
+		userID = authData.UserID
 	}
 
 	var request userDomain.UpdateUser
@@ -166,10 +174,17 @@ func (c *Controller) UpdateUser(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
 func (c *Controller) DeleteUser(ctx *fiber.Ctx) (err error) {
-	userID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+
+	var userID int
+	if authData.Role == "admin" {
+		userID, err = strconv.Atoi(ctx.Params("id"))
+		if err != nil {
+			appError := fiber.NewError(fiber.StatusBadRequest, "user id is invalid")
+			return ctx.Status(fiber.StatusBadRequest).JSON(appError)
+		}
+	} else {
+		userID = authData.UserID
 	}
 
 	if err = c.UserService.Delete(userID); err != nil {

@@ -7,7 +7,7 @@ import (
 	useCasePhoto "hexagonal-fiber/application/usecases/photo"
 	photoDomain "hexagonal-fiber/domain/photo"
 
-	// secureDomain "hexagonal-fiber/domain/security"
+	secureDomain "hexagonal-fiber/domain/security"
 
 	authConst "hexagonal-fiber/utils/constant/auth"
 	mssgConst "hexagonal-fiber/utils/constant/message"
@@ -33,7 +33,7 @@ type Controller struct {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [post]
 func (c *Controller) NewPhoto(ctx *fiber.Ctx) (err error) {
-	UserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	var request photoDomain.NewPhoto
 	if err := ctx.BodyParser(&request); err != nil {
@@ -41,7 +41,7 @@ func (c *Controller) NewPhoto(ctx *fiber.Ctx) (err error) {
 		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
 	}
 
-	request.UserID = UserID
+	request.UserID = authData.UserID
 	if err = createValidation(request); err != nil {
 		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
 		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
@@ -88,12 +88,12 @@ func (c *Controller) GetAllPhotos(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [get]
 func (c *Controller) GetAllOwnPhotos(ctx *fiber.Ctx) (err error) {
-	UserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 20)
 
-	photos, err := c.PhotoService.UserGetAll(UserID, page, limit)
+	photos, err := c.PhotoService.UserGetAll(authData.UserID, page, limit)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
@@ -168,8 +168,7 @@ func (c *Controller) GetPhotoByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
 func (c *Controller) UpdatePhoto(ctx *fiber.Ctx) (err error) {
-	authRole := ctx.Locals(authConst.AuthRole).(string)
-	authUserID := ctx.Locals(authConst.AuthUserID).(int)
+	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
 
 	photoID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {
@@ -190,14 +189,14 @@ func (c *Controller) UpdatePhoto(ctx *fiber.Ctx) (err error) {
 
 	var photo *photoDomain.Photo
 
-	if authRole == "admin" {
+	if authData.Role == "admin" {
 		photo, err = c.PhotoService.Update(photoID, request)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return
 		}
 	} else {
-		photo, err = c.PhotoService.UserUpdate(photoID, authUserID, request)
+		photo, err = c.PhotoService.UserUpdate(photoID, authData.UserID, request)
 		if err != nil {
 			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 			return

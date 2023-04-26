@@ -14,10 +14,11 @@ import (
 	"strings"
 	"time"
 
-	limit "github.com/aviddiviner/gin-limit"
-	"github.com/gin-contrib/cors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/spf13/viper"
 	"github.com/valyala/fasthttp"
 
@@ -32,8 +33,9 @@ func main() {
 		JSONEncoder: json.Marshal,
 		JSONDecoder: json.Unmarshal,
 	})
-	router.Use(limit.MaxAllowed(200))
-	router.Use(cors.Default())
+	router.Use(logger.New())
+	router.Use(limiter.New())
+	router.Use(cors.ConfigDefault)
 	router.Use(csrf.New(csrf.ConfigDefault))
 
 	// postgres connection
@@ -57,6 +59,7 @@ func main() {
 	// postgres routes
 	routes.ApplicationV1Router(router, postgresDB)
 
+	// running config
 	startServer(router)
 }
 
