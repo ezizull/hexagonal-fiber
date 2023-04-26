@@ -18,7 +18,7 @@ type Service struct {
 }
 
 // Login implements the login use case
-func (s *Service) Login(user userDomain.LoginUser) (*userDomain.SecurityAuthenticatedUser, error) {
+func (s *Service) Login(user userDomain.LoginRequest) (*userDomain.SecurityAuthenticatedUser, error) {
 	userMap := map[string]interface{}{"email": user.Email}
 	userRole, err := s.UserRepository.GetWithRoleByMap(userMap)
 

@@ -27,26 +27,18 @@ type Controller struct {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /auth/login [post]
 func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
-	var request LoginRequest
+	var request userDomain.LoginRequest
 
-	if err = ctx.BodyParser(request); err != nil {
+	if err = ctx.BodyParser(&request); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": messageUtil.ValidationError,
 		})
 		return
 	}
 
-	user, errResp := controllers.Validation(userDomain.LoginUser{
-		Email:    request.Email,
-		Password: request.Password,
-	})
+	controllers.Validation(request)
 
-	if errResp != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errResp)
-		return
-	}
-
-	authDataUser, err := c.AuthService.Login(user)
+	authDataUser, err := c.AuthService.Login(request)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
@@ -65,7 +57,7 @@ func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /auth/access-token [post]
 func (c *Controller) GetAccessTokenByRefreshToken(ctx *fiber.Ctx) (err error) {
-	var request AccessTokenRequest
+	var request userDomain.AccessTokenRequest
 
 	if err = ctx.BodyParser(request); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{

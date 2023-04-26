@@ -13,10 +13,10 @@ import (
 var validate = validator.New()
 
 type generic interface {
-	userDomain.LoginUser | userDomain.NewUser | sosmedDomain.NewSocialMedia | photoDomain.NewPhoto | commentDomain.NewComment
+	userDomain.LoginRequest | userDomain.NewUser | sosmedDomain.NewSocialMedia | photoDomain.NewPhoto | commentDomain.NewComment
 }
 
-func Validation[T generic](object T) (T, []*errorDomain.ErrorResponse) {
+func Validation[T generic](object T) []*errorDomain.ErrorResponse {
 	var errors []*errorDomain.ErrorResponse
 	err := validate.Struct(object)
 	if err != nil {
@@ -28,5 +28,5 @@ func Validation[T generic](object T) (T, []*errorDomain.ErrorResponse) {
 			errors = append(errors, &element)
 		}
 	}
-	return object, errors
+	return errors
 }

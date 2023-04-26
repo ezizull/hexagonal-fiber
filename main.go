@@ -16,7 +16,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/spf13/viper"
@@ -35,8 +34,8 @@ func main() {
 	})
 	router.Use(logger.New())
 	router.Use(limiter.New())
-	router.Use(cors.ConfigDefault)
-	router.Use(csrf.New(csrf.ConfigDefault))
+	router.Use(cors.New(cors.ConfigDefault))
+	// router.Use(csrf.New(csrf.ConfigDefault))
 
 	// postgres connection
 	postgresDB, err := postgres.NewGorm()
