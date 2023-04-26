@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hexagonal-fiber/cmd"
 	secureDomain "hexagonal-fiber/domain/security"
+
 	"hexagonal-fiber/infrastructure/repository/postgres"
 
 	"log"
@@ -16,6 +17,7 @@ import (
 	limit "github.com/aviddiviner/gin-limit"
 	"github.com/gin-contrib/cors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/spf13/viper"
 	"github.com/valyala/fasthttp"
 
@@ -25,18 +27,19 @@ import (
 // main services
 func main() {
 
+	// initialize config
 	router := fiber.New(fiber.Config{
 		JSONEncoder: json.Marshal,
 		JSONDecoder: json.Unmarshal,
 	})
 	router.Use(limit.MaxAllowed(200))
 	router.Use(cors.Default())
+	router.Use(csrf.New(csrf.ConfigDefault))
 
 	// postgres connection
 	postgresDB, err := postgres.NewGorm()
 	if err != nil {
-		_ = fmt.Errorf("fatal error in postgres file: %s", err)
-		panic(err)
+		panic(fmt.Errorf("fatal error in postgres file: %s", err))
 	}
 
 	// commands handler
@@ -45,8 +48,7 @@ func main() {
 	// getting key ssh
 	err = secureDomain.GettingKeySSH()
 	if err != nil {
-		_ = fmt.Errorf("fatal error in getting key ssh: %s", err)
-		panic(err)
+		panic(fmt.Errorf("fatal error in getting key ssh: %s", err))
 	}
 
 	// root routes
