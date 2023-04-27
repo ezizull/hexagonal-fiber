@@ -27,10 +27,10 @@ func updateValidation(request *userDomain.UpdateUser) (err error) {
 		}
 	}
 
-	// Password must have minimum length of 6, at least 1 special character, 1 capital letter, 1 lowercase letter, and 1 number
+	// Password must have minimum length of 8, at least 1 special character, 1 capital letter, 1 lowercase letter, and 1 number
 	if request.Password != nil {
-		if len(*request.Password) < 6 {
-			errorsValidation = append(errorsValidation, "password must be at least 6 characters long")
+		if len(*request.Password) < 8 {
+			errorsValidation = append(errorsValidation, "password must be at least 8 characters long")
 		}
 		hasSpecialChar := regexp.MustCompile(`[^a-zA-Z0-9]+`).MatchString
 		if !hasSpecialChar(*request.Password) {
@@ -74,9 +74,9 @@ func createValidation(request userDomain.NewUser) (err error) {
 		return errors.New("Invalid email format")
 	}
 
-	// Password must have minimum length of 6, at least 1 special character, 1 capital letter, 1 lowercase letter, and 1 number
-	if len(request.Password) < 6 {
-		return errors.New("Password should be at least 6 characters long")
+	// Password must have minimum length of 8, at least 1 special character, 1 capital letter, 1 lowercase letter, and 1 number
+	if len(request.Password) < 8 {
+		return errors.New("Password should be at least 8 characters long")
 	}
 	if !regexp.MustCompile(`[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]`).MatchString(request.Password) {
 		return errors.New("Password should contain at least one special character")

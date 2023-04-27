@@ -36,7 +36,10 @@ func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
 		return
 	}
 
-	controllers.Validation(request)
+	if err = controllers.Validation(request); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
+		return
+	}
 
 	authDataUser, err := c.AuthService.Login(request)
 	if err != nil {

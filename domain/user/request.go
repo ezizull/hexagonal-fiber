@@ -4,10 +4,9 @@ package user
 type NewUser struct {
 	UserName string `json:"username" example:"someUser" gorm:"unique" validate:"required"`
 	Email    string `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
-	Password string `json:"password" example:"Pass@Word123" validate:"required,min=8,unique`
-
-	Age    int    `json:"age" example:"1" validate:"required"`
-	RoleID string `json:"role_id" gorm:"index" validate:"required"`
+	Password string `json:"password" example:"Pass@Word123" validate:"required,password"`
+	Age      int    `json:"age" example:"1" validate:"required"`
+	RoleID   string `json:"role_id" gorm:"index" validate:"required"`
 }
 
 // UpdateUser is a struct that contains the request body for the update user
@@ -22,7 +21,7 @@ type UpdateUser struct {
 // LoginRequest is a struct that contains the request body for the login user
 type LoginRequest struct {
 	Email    string `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
-	Password string `json:"password" example:"Pass@Word123" validate:"required,min=8,unique`
+	Password string `json:"password" example:"Pass@Word123" validate:"required,password"`
 }
 
 // AccessTokenRequest is a struct that contains the login request information
