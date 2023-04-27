@@ -35,7 +35,6 @@ func main() {
 	router.Use(logger.New())
 	router.Use(limiter.New())
 	router.Use(cors.New(cors.ConfigDefault))
-	// router.Use(csrf.New(csrf.ConfigDefault))
 
 	// postgres connection
 	postgresDB, err := postgres.NewGorm()
@@ -72,7 +71,7 @@ func startServer(app *fiber.App) {
 	// check environment
 	environment := os.Getenv("ENV")
 	if environment == "railway-production" {
-		log.Fatal(app.Listen(":8080"))
+		log.Fatal(app.Listen(":"))
 
 	} else {
 		serverPort := fmt.Sprintf(":%s", viper.GetString("ServerPort"))

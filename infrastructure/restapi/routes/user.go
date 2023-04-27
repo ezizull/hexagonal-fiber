@@ -24,7 +24,7 @@ func UserRoutes(router fiber.Router, controller *userController.Controller) {
 		routerAuth.Delete("/:id", controller.DeleteUser)
 	}
 
-	// admin role
+	// authorization
 	routerAuth.Use(middlewares.AuthRoleMiddleware([]string{"admin"}))
 	{
 		routerAuth.Get("", controller.GetAllUsers)

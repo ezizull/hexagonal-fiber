@@ -30,7 +30,7 @@
         }
       }
     },
-    "MySQL": {
+    "Redist": {
       "Localhost": {
         "Read": {
           "Hostname": "localhost",

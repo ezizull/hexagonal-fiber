@@ -7,6 +7,7 @@ import (
 	"hexagonal-fiber/infrastructure/restapi/adapter"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
 
@@ -40,6 +41,11 @@ func ApplicationV1Router(router fiber.Router, db *gorm.DB) {
 	{
 		// Auth Routes
 		AuthRoutes(routerV1, adapter.AuthAdapter(db))
+
+		// CSRF Middleware
+		{
+			router.Use(csrf.New(csrf.ConfigDefault))
+		}
 
 		// User Routes
 		UserRoutes(routerV1, adapter.UserAdapter(db))

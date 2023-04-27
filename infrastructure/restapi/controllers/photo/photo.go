@@ -33,7 +33,7 @@ type Controller struct {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [post]
 func (c *Controller) NewPhoto(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	var request photoDomain.NewPhoto
 	if err := ctx.BodyParser(&request); err != nil {
@@ -88,7 +88,7 @@ func (c *Controller) GetAllPhotos(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo [get]
 func (c *Controller) GetAllOwnPhotos(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 20)
@@ -168,7 +168,7 @@ func (c *Controller) GetPhotoByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
 func (c *Controller) UpdatePhoto(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	photoID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {

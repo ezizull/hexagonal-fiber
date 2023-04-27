@@ -31,7 +31,7 @@ type Controller struct {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [post]
 func (c *Controller) NewComment(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	var request commentDomain.NewComment
 	if err := ctx.BodyParser(&request); err != nil {
@@ -92,7 +92,7 @@ func (c *Controller) GetAllComments(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment [get]
 func (c *Controller) GetAllOwnComments(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 20)
@@ -143,7 +143,7 @@ func (c *Controller) GetCommentByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
 func (c *Controller) UpdateComment(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	commentID, err := strconv.Atoi(ctx.Params("id"))
 	if err != nil {

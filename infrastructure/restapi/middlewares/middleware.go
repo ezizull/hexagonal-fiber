@@ -37,7 +37,7 @@ func AuthJWTMiddleware() fiber.Handler {
 // AuthRoleMiddleware is a function that validates the role of user
 func AuthRoleMiddleware(validRoles []string) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+		authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 		if authData.Role == "" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "You are not authorized"})

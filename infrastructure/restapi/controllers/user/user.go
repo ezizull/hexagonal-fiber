@@ -84,7 +84,7 @@ func (c *Controller) GetAllUsers(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
 func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	if authData.Role == "admin" {
 		var userID int
@@ -130,7 +130,7 @@ func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
 func (c *Controller) UpdateUser(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	var userID int
 	if authData.Role == "admin" {
@@ -174,7 +174,7 @@ func (c *Controller) UpdateUser(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /user/{user_id} [get]
 func (c *Controller) DeleteUser(ctx *fiber.Ctx) (err error) {
-	authData := ctx.Locals(authConst.Authorized).(secureDomain.Claims)
+	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
 
 	var userID int
 	if authData.Role == "admin" {

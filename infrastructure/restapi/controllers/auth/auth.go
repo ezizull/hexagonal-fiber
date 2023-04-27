@@ -5,7 +5,7 @@ import (
 	useCaseAuth "hexagonal-fiber/application/usecases/auth"
 	userDomain "hexagonal-fiber/domain/user"
 
-	messageUtil "hexagonal-fiber/utils/constant/message"
+	mssgConst "hexagonal-fiber/utils/constant/message"
 
 	"hexagonal-fiber/infrastructure/restapi/controllers"
 
@@ -31,7 +31,7 @@ func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
 
 	if err = ctx.BodyParser(&request); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": messageUtil.ValidationError,
+			"error": mssgConst.ValidationError,
 		})
 		return
 	}
@@ -64,7 +64,7 @@ func (c *Controller) GetAccessTokenByRefreshToken(ctx *fiber.Ctx) (err error) {
 
 	if err = ctx.BodyParser(request); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": messageUtil.ValidationError,
+			"error": mssgConst.ValidationError,
 		})
 		return
 	}
