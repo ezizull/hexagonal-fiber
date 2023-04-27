@@ -25,7 +25,7 @@ import (
 type infoDatabasePostgreSQL struct {
 	Read struct {
 		Hostname   string
-		Name       string
+		Database   string
 		Username   string
 		Password   string
 		Port       string
@@ -35,7 +35,7 @@ type infoDatabasePostgreSQL struct {
 	}
 	Write struct {
 		Hostname   string
-		Name       string
+		Database   string
 		Username   string
 		Password   string
 		Port       string
@@ -87,8 +87,8 @@ func (infoDB *infoDatabasePostgreSQL) getPostgreConn(nameMap string) (err error)
 	}
 
 	if dbname != "" {
-		infoDB.Read.Name = dbname
-		infoDB.Write.Name = dbname
+		infoDB.Read.Database = dbname
+		infoDB.Write.Database = dbname
 	}
 
 	if dbtime != "" {
@@ -97,9 +97,9 @@ func (infoDB *infoDatabasePostgreSQL) getPostgreConn(nameMap string) (err error)
 	}
 
 	infoDB.Read.DriverConn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
-		infoDB.Read.Hostname, infoDB.Read.Username, infoDB.Read.Password, infoDB.Read.Name, infoDB.Read.Port, infoDB.Read.Timezone)
+		infoDB.Read.Hostname, infoDB.Read.Username, infoDB.Read.Password, infoDB.Read.Database, infoDB.Read.Port, infoDB.Read.Timezone)
 	infoDB.Write.DriverConn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
-		infoDB.Write.Hostname, infoDB.Write.Username, infoDB.Write.Password, infoDB.Write.Name, infoDB.Write.Port, infoDB.Write.Timezone)
+		infoDB.Write.Hostname, infoDB.Write.Username, infoDB.Write.Password, infoDB.Write.Database, infoDB.Write.Port, infoDB.Write.Timezone)
 	return
 }
 

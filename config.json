@@ -12,7 +12,7 @@
       "Localhost": {
         "Read": {
           "Hostname": "localhost",
-          "Name": "hacktiv_final",
+          "Database": "hacktiv_final",
           "Username": "root",
           "Password": "root",
           "Port": "5432",
@@ -21,7 +21,7 @@
         },
         "Write": {
           "Hostname": "localhost",
-          "Name": "hacktiv_final",
+          "Database": "hacktiv_final",
           "Username": "root",
           "Password": "root",
           "Port": "5432",
@@ -30,25 +30,21 @@
         }
       }
     },
-    "Redist": {
+    "Redis": {
       "Localhost": {
         "Read": {
           "Hostname": "localhost",
-          "Name": "hacktiv_final",
+          "Database": 0,
           "Username": "root",
           "Password": "root",
-          "Port": "3306",
-          "Parameter": "?parseTime=true",
-          "Timezone": "Asia/Jakarta"
+          "Port": "6379"
         },
         "Write": {
           "Hostname": "localhost",
-          "Name": "hacktiv_final",
+          "Database": 0,
           "Username": "root",
           "Password": "root",
-          "Port": "3306",
-          "Parameter": "?parseTime=true",
-          "Timezone": "Asia/Jakarta"
+          "Port": "6379"
         }
       }
     }
