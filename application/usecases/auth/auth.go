@@ -17,8 +17,8 @@ type Service struct {
 	UserRepository userRepository.Repository
 }
 
-// Login implements the login use case
-func (s *Service) Login(user userDomain.LoginRequest) (*userDomain.SecurityAuthenticatedUser, error) {
+// LoginJWT implements the login with jwt methode use case
+func (s *Service) LoginJWT(user userDomain.LoginRequest) (*userDomain.SecurityAuthenticatedUser, error) {
 	userMap := map[string]interface{}{"email": user.Email}
 	userRole, err := s.UserRepository.GetWithRoleByMap(userMap)
 
