@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"hexagonal-fiber/cmd/migrate"
+	databsDomain "hexagonal-fiber/domain/database"
 	"os"
 
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -23,9 +23,9 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(postgres *gorm.DB) {
+func Execute(db databsDomain.Database) {
 	// set migrating database
-	migrate.SetMigrateDB(postgres)
+	migrate.SetMigrateDB(db.Postgre)
 
 	// postgres migrating flag
 	rootCmd.AddCommand(migrate.PostgresCmd)

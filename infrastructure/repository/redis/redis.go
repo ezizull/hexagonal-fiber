@@ -50,6 +50,7 @@ func (infoDB *InfoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 		return
 	}
 
+	fmt.Println("check get redis conn")
 	err = mapstructure.Decode(viper.GetStringMap(nameMap), infoDB)
 	if err != nil {
 		return

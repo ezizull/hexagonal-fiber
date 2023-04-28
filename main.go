@@ -38,6 +38,30 @@ func main() {
 	router.Use(limiter.New())
 	router.Use(cors.New(cors.ConfigDefault))
 
+	// init databases
+	databases := initDatabase()
+
+	// commands handler
+	cmd.Execute(databases)
+
+	// getting key ssh
+	err := secureDomain.GettingKeySSH()
+	if err != nil {
+		panic(fmt.Errorf("fatal error in getting key ssh: %s", err))
+	}
+
+	// root routes
+	routes.ApplicationRootRouter(router, databases)
+
+	// postgres routes
+	routes.ApplicationV1Router(router, databases)
+
+	// running config
+	startServer(router)
+}
+
+// initial databases
+func initDatabase() databsDomain.Database {
 	// postgres connection
 	postgresDB, err := postgres.NewGorm()
 	if err != nil {
@@ -50,29 +74,10 @@ func main() {
 		panic(fmt.Errorf("fatal error in redis: %s", err))
 	}
 
-	// commands handler
-	cmd.Execute(postgresDB)
-
-	// getting key ssh
-	err = secureDomain.GettingKeySSH()
-	if err != nil {
-		panic(fmt.Errorf("fatal error in getting key ssh: %s", err))
-	}
-
-	// combine databases
-	databases := databsDomain.Database{
+	return databsDomain.Database{
 		Postgre: postgresDB,
 		Redis:   redisDB,
 	}
-
-	// root routes
-	routes.ApplicationRootRouter(router, databases)
-
-	// postgres routes
-	routes.ApplicationV1Router(router, databases)
-
-	// running config
-	startServer(router)
 }
 
 // start server config

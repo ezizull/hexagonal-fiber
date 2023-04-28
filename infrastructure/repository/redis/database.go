@@ -1,12 +1,12 @@
 package redis
 
-import "github.com/gofiber/fiber/v2"
-
 // InitRedis is a function that returns a redis database connection using initial configuration
-func InitRedis() (infoRed *InfoDatabaseRedis, err error) {
-	if err = infoRed.getRedisConn("Databases.Redis.Localhost"); err != nil {
-		return nil, fiber.NewError(fiber.StatusInternalServerError, "error when initial repository")
+func InitRedis() (*InfoDatabaseRedis, error) {
+	var infoDB InfoDatabaseRedis
+	err := infoDB.getRedisConn("Databases.Redis.Localhost")
+	if err != nil {
+		return nil, err
 	}
 
-	return infoRed, nil
+	return &infoDB, nil
 }
