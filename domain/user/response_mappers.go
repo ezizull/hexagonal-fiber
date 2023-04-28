@@ -2,7 +2,7 @@ package user
 
 func (userRole *UserRole) UserToResponseMapper() (createUserRoleResponse *ResponseUserRole) {
 	return &ResponseUserRole{
-		ID:       userRole.ID,
+		ID:       userRole.ID.String(),
 		UserName: userRole.UserName,
 		Email:    userRole.Email,
 		Role:     userRole.Role,
@@ -11,7 +11,7 @@ func (userRole *UserRole) UserToResponseMapper() (createUserRoleResponse *Respon
 
 func (user *User) DomainToResponseMapper() (createUserResponse *ResponseUser) {
 	return &ResponseUser{
-		ID:        user.ID,
+		ID:        user.ID.String(),
 		UserName:  user.UserName,
 		Email:     user.Email,
 		Age:       user.Age,

@@ -22,7 +22,7 @@ func (s *Service) LoginJWT(user userDomain.LoginRequest) (*userDomain.SecurityAu
 	userMap := map[string]interface{}{"email": user.Email}
 	userRole, err := s.UserRepository.GetWithRoleByMap(userMap)
 
-	if err != nil || userRole.ID == 0 {
+	if err != nil || userRole.ID.String() == "" {
 		err = fiber.NewError(fiber.StatusUnauthorized, "email or password does not match")
 		return nil, err
 	}
@@ -33,11 +33,11 @@ func (s *Service) LoginJWT(user userDomain.LoginRequest) (*userDomain.SecurityAu
 		return nil, err
 	}
 
-	accessTokenClaims, err := jwt.GenerateJWTToken(userRole.ID, "access", userRole.Role.Name)
+	accessTokenClaims, err := jwt.GenerateJWTToken(userRole.ID.String(), "access", userRole.Role.Name)
 	if err != nil {
 		return nil, err
 	}
-	refreshTokenClaims, err := jwt.GenerateJWTToken(userRole.ID, "refresh", userRole.Role.Name)
+	refreshTokenClaims, err := jwt.GenerateJWTToken(userRole.ID.String(), "refresh", userRole.Role.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (s *Service) AccessTokenByRefreshToken(refreshToken string) (*userDomain.Se
 
 	userMap := map[string]interface{}{"id": claimsMap["user_id"]}
 	userRole, err := s.UserRepository.GetWithRoleByMap(userMap)
-	if err != nil || userRole.ID == 0 {
+	if err != nil || userRole.ID.String() == "" {
 		err = fiber.NewError(fiber.StatusNotFound, "user not found")
 		return nil, err
 	}
 
-	accessTokenClaims, err := jwt.GenerateJWTToken(userRole.ID, "access", userRole.Role.Name)
+	accessTokenClaims, err := jwt.GenerateJWTToken(userRole.ID.String(), "access", userRole.Role.Name)
 	if err != nil {
 		return nil, err
 	}

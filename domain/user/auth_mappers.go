@@ -5,7 +5,7 @@ func SecAuthUserMapper(user *User, authInfo *Auth) *SecurityAuthenticatedUser {
 		Data: DataUserAuthenticated{
 			UserName: user.UserName,
 			Email:    user.Email,
-			ID:       user.ID,
+			ID:       user.ID.String(),
 			RoleID:   user.RoleID,
 		},
 		Security: DataSecurityAuthenticated{
@@ -21,7 +21,7 @@ func SecAuthUserMapper(user *User, authInfo *Auth) *SecurityAuthenticatedUser {
 func SecAuthUserRoleMapper(userRole *UserRole, authInfo *Auth) *SecurityAuthenticatedUser {
 	return &SecurityAuthenticatedUser{
 		Data: DataUserAuthenticated{
-			ID:       userRole.ID,
+			ID:       userRole.ID.String(),
 			UserName: userRole.UserName,
 			Email:    userRole.Email,
 			RoleID:   userRole.RoleID,

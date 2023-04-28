@@ -60,7 +60,7 @@ func (its *IntTestSuite) TearDownTest() {
 }
 
 func (its *IntTestSuite) TestGetByID() {
-	actual, err := its.photoCase.GetByID(1)
+	actual, err := its.photoCase.GetByID("1")
 
 	its.Nil(err)
 	its.Equal(uint(1), actual.ID)
@@ -68,7 +68,7 @@ func (its *IntTestSuite) TestGetByID() {
 }
 
 func (its *IntTestSuite) TestGetByID_Error() {
-	actual, err := its.photoCase.GetByID(0)
+	actual, err := its.photoCase.GetByID("")
 
 	its.EqualError(err, mssgConst.StatusNotFound)
 	its.Equal(uint(0), actual.ID)

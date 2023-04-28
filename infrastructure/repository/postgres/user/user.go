@@ -10,6 +10,7 @@ import (
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 
 	"gorm.io/gorm"
 )
@@ -81,7 +82,7 @@ func (r *Repository) GetWithRoleByMap(userMap map[string]interface{}) (*userDoma
 }
 
 // GetWithRole ... Fetch only one user with Role by ID
-func (r *Repository) GetWithRole(id int) (*userDomain.UserRole, error) {
+func (r *Repository) GetWithRole(id string) (*userDomain.UserRole, error) {
 	var userRole userDomain.UserRole
 	err := r.DB.Preload("Role").Where("id = ?", id).First(&userRole).Error
 
@@ -98,7 +99,7 @@ func (r *Repository) GetWithRole(id int) (*userDomain.UserRole, error) {
 }
 
 // GetByID ... Fetch only one user by ID
-func (r *Repository) GetByID(id int) (*userDomain.User, error) {
+func (r *Repository) GetByID(id string) (*userDomain.User, error) {
 	var user userDomain.User
 	err := r.DB.Where("id = ?", id).First(&user).Error
 
@@ -115,11 +116,16 @@ func (r *Repository) GetByID(id int) (*userDomain.User, error) {
 }
 
 // Update ... Update user
-func (r *Repository) Update(id int, updateUser *userDomain.User) (*userDomain.User, error) {
+func (r *Repository) Update(id string, updateUser *userDomain.User) (*userDomain.User, error) {
 	var user userDomain.User
 
-	user.ID = id
-	err := r.DB.Model(&user).
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect user id")
+	}
+
+	user.ID = uuid
+	err = r.DB.Model(&user).
 		Updates(updateUser).Error
 
 	if err != nil {
@@ -136,9 +142,6 @@ func (r *Repository) Update(id int, updateUser *userDomain.User) (*userDomain.Us
 		default:
 			return nil, fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 		}
-
-		return nil, err
-
 	}
 
 	err = r.DB.Where("id = ?", id).First(&user).Error
@@ -150,7 +153,7 @@ func (r *Repository) Update(id int, updateUser *userDomain.User) (*userDomain.Us
 }
 
 // Delete ... Delete user
-func (r *Repository) Delete(id int) (err error) {
+func (r *Repository) Delete(id string) (err error) {
 	tx := r.DB.Delete(&userDomain.User{}, id)
 	if tx.Error != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)

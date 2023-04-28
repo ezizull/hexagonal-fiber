@@ -7,13 +7,13 @@ import (
 
 type CommentTesting interface {
 	GetAll(page int, limit int) (*commentDomain.PaginationComment, error)
-	UserGetAll(userId int, page int, limit int) (*commentDomain.PaginationComment, error)
-	GetByID(id int) (*commentDomain.Comment, error)
-	UserGetByID(id int, userId int) (*commentDomain.Comment, error)
+	UserGetAll(userId string, page int, limit int) (*commentDomain.PaginationComment, error)
+	GetByID(id string) (*commentDomain.Comment, error)
+	UserGetByID(id string, userId string) (*commentDomain.Comment, error)
 	Create(comment *commentDomain.NewComment) (*commentDomain.Comment, error)
 	GetByMap(commentMap map[string]interface{}) (*commentDomain.Comment, error)
-	Delete(id int) (err error)
-	Update(id int, updateComment commentDomain.UpdateComment) (*commentDomain.Comment, error)
+	Delete(id string) (err error)
+	Update(id string, updateComment commentDomain.UpdateComment) (*commentDomain.Comment, error)
 }
 
 func NewTesting(commentTest commentRepository.CommentTesting) CommentTesting {

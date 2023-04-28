@@ -2,8 +2,6 @@
 package sosmed
 
 import (
-	"strconv"
-
 	useCaseSosmed "hexagonal-fiber/application/usecases/sosmed"
 	sosmedDomain "hexagonal-fiber/domain/sosmed"
 
@@ -113,12 +111,7 @@ func (c *Controller) GetAllOwnSocialMedia(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed/{sosmed_id} [get]
 func (c *Controller) GetSocialMediaByID(ctx *fiber.Ctx) (err error) {
-	sosmedID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "sosmed id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
+	sosmedID := ctx.Params("id")
 	sosmed, err := c.SocialMediaService.GetByID(sosmedID)
 	if err != nil {
 		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
@@ -140,12 +133,7 @@ func (c *Controller) GetSocialMediaByID(ctx *fiber.Ctx) (err error) {
 // @Router /sosmed/{sosmed_id} [get]
 func (c *Controller) UpdateSocialMedia(ctx *fiber.Ctx) (err error) {
 	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
-
-	sosmedID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "sosmed id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
+	sosmedID := ctx.Params("id")
 
 	var request sosmedDomain.UpdateSocialMedia
 	if err := ctx.BodyParser(&request); err != nil {
@@ -188,12 +176,7 @@ func (c *Controller) UpdateSocialMedia(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /sosmed/{sosmed_id} [get]
 func (c *Controller) DeleteSocialMedia(ctx *fiber.Ctx) (err error) {
-	sosmedID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "sosmed id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
+	sosmedID := ctx.Params("id")
 	if err = c.SocialMediaService.Delete(sosmedID); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return

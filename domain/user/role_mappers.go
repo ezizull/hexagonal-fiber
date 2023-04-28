@@ -3,7 +3,7 @@ package user
 // ToRoleDomainMapper function to convert role of user role repo to role domain
 func (userRole *UserRole) ToRoleDomainMapper() *Role {
 	return &Role{
-		ID:        userRole.ID,
+		ID:        userRole.Role.ID,
 		Name:      userRole.Role.Name,
 		CreatedAt: userRole.CreatedAt,
 		UpdatedAt: userRole.UpdatedAt,

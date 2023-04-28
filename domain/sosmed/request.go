@@ -4,7 +4,7 @@ package sosmed
 type NewSocialMedia struct {
 	Name           string `json:"name" example:"name" validate:"required"`
 	SocialMediaUrl string `json:"social_media_url" example:"www.sosmed.com" validate:"required"`
-	UserID         int    `json:"user_id" gorm:"index" validate:"-"`
+	UserID         string `json:"user_id" gorm:"index" validate:"-"`
 }
 
 // UpdateSocialMedia is a struct that contains the data for update social media

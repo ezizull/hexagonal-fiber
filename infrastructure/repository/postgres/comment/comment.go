@@ -9,6 +9,7 @@ import (
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -53,7 +54,7 @@ func (r *Repository) GetAll(page int, limit int) (*commentDomain.PaginationComme
 }
 
 // UserGetAll Fetch all comment data
-func (r *Repository) UserGetAll(userId int, page int, limit int) (*commentDomain.PaginationComment, error) {
+func (r *Repository) UserGetAll(userId string, page int, limit int) (*commentDomain.PaginationComment, error) {
 	var comments []commentDomain.Comment
 	var total int64
 
@@ -89,7 +90,7 @@ func (r *Repository) UserGetAll(userId int, page int, limit int) (*commentDomain
 }
 
 // GetByID ... Fetch only one comment by Id
-func (r *Repository) GetByID(id int) (*commentDomain.Comment, error) {
+func (r *Repository) GetByID(id string) (*commentDomain.Comment, error) {
 	var comment commentDomain.Comment
 	err := r.DB.Where("id = ?", id).First(&comment).Error
 
@@ -106,7 +107,7 @@ func (r *Repository) GetByID(id int) (*commentDomain.Comment, error) {
 }
 
 // UserGetByID ... Fetch only one comment by Id
-func (r *Repository) UserGetByID(id int, userId int) (*commentDomain.Comment, error) {
+func (r *Repository) UserGetByID(id string, userId string) (*commentDomain.Comment, error) {
 	var comment commentDomain.Comment
 	err := r.DB.Where("id = ?", id).Where("user_id = ?", userId).First(&comment).Error
 
@@ -159,11 +160,16 @@ func (r *Repository) Create(newComment *commentDomain.Comment) (createdComment *
 }
 
 // Update ... Update comment
-func (r *Repository) Update(id int, updateComment *commentDomain.Comment) (*commentDomain.Comment, error) {
+func (r *Repository) Update(id string, updateComment *commentDomain.Comment) (*commentDomain.Comment, error) {
 	var comment commentDomain.Comment
 
-	comment.ID = id
-	err := r.DB.Model(&comment).
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect comment id")
+	}
+
+	comment.ID = uuid
+	err = r.DB.Model(&comment).
 		Updates(updateComment).Error
 
 	if err != nil {
@@ -192,12 +198,18 @@ func (r *Repository) Update(id int, updateComment *commentDomain.Comment) (*comm
 }
 
 // UserUpdate ... UserUpdate comment
-func (r *Repository) UserUpdate(id int, userId int, updateComment *commentDomain.Comment) (*commentDomain.Comment, error) {
+func (r *Repository) UserUpdate(id string, userId string, updateComment *commentDomain.Comment) (*commentDomain.Comment, error) {
 	var comment commentDomain.Comment
 
-	comment.ID = id
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect comment id")
+	}
+
+	comment.ID = uuid
 	comment.UserID = userId
-	err := r.DB.Model(&comment).
+
+	err = r.DB.Model(&comment).
 		Updates(updateComment).Error
 
 	if err != nil {
@@ -226,7 +238,7 @@ func (r *Repository) UserUpdate(id int, userId int, updateComment *commentDomain
 }
 
 // Delete ... Delete comment
-func (r *Repository) Delete(id int) (err error) {
+func (r *Repository) Delete(id string) (err error) {
 	tx := r.DB.Delete(&commentDomain.Comment{}, id)
 
 	log.Println("check ", tx)

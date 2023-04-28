@@ -32,7 +32,7 @@ func (s *Service) GetAll(page int, limit int) (*sosmedDomain.PaginationSocialMed
 }
 
 // UserGetAll is a function that returns all sosmeds
-func (s *Service) UserGetAll(userId int, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
+func (s *Service) UserGetAll(userId string, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
 
 	all, err := s.SocialMediaRepository.UserGetAll(userId, page, limit)
 	if err != nil {
@@ -51,12 +51,12 @@ func (s *Service) UserGetAll(userId int, page int, limit int) (*sosmedDomain.Pag
 }
 
 // GetByID is a function that returns a sosmed by id
-func (s *Service) GetByID(id int) (*sosmedDomain.SocialMedia, error) {
+func (s *Service) GetByID(id string) (*sosmedDomain.SocialMedia, error) {
 	return s.SocialMediaRepository.GetByID(id)
 }
 
 // UserGetByID is a function that returns a sosmed by id
-func (s *Service) UserGetByID(id int, userId int) (*sosmedDomain.SocialMedia, error) {
+func (s *Service) UserGetByID(id string, userId string) (*sosmedDomain.SocialMedia, error) {
 	return s.SocialMediaRepository.UserGetByID(id, userId)
 }
 
@@ -74,18 +74,18 @@ func (s *Service) GetByMap(sosmedMap map[string]interface{}) (*sosmedDomain.Soci
 }
 
 // Delete is a function that deletes a sosmed by id
-func (s *Service) Delete(id int) (err error) {
+func (s *Service) Delete(id string) (err error) {
 	return s.SocialMediaRepository.Delete(id)
 }
 
 // Update is a function that updates a sosmed by id
-func (s *Service) Update(id int, updateSocialMedia sosmedDomain.UpdateSocialMedia) (*sosmedDomain.SocialMedia, error) {
+func (s *Service) Update(id string, updateSocialMedia sosmedDomain.UpdateSocialMedia) (*sosmedDomain.SocialMedia, error) {
 	sosmed := updateSocialMedia.ToDomainMapper()
 	return s.SocialMediaRepository.Update(id, &sosmed)
 }
 
 // Update is a function that updates a sosmed by id
-func (s *Service) UserUpdate(id int, userId int, updateSocialMedia sosmedDomain.UpdateSocialMedia) (*sosmedDomain.SocialMedia, error) {
+func (s *Service) UserUpdate(id string, userId string, updateSocialMedia sosmedDomain.UpdateSocialMedia) (*sosmedDomain.SocialMedia, error) {
 	sosmed := updateSocialMedia.ToDomainMapper()
 	return s.SocialMediaRepository.UserUpdate(id, userId, &sosmed)
 }

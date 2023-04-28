@@ -10,6 +10,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -54,7 +55,7 @@ func (r *Repository) GetAll(page int, limit int) (*sosmedDomain.PaginationSocial
 }
 
 // UserGetAll Fetch all sosmed data
-func (r *Repository) UserGetAll(userId int, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
+func (r *Repository) UserGetAll(userId string, page int, limit int) (*sosmedDomain.PaginationSocialMedia, error) {
 	var sosmeds []sosmedDomain.SocialMedia
 	var total int64
 
@@ -89,7 +90,7 @@ func (r *Repository) UserGetAll(userId int, page int, limit int) (*sosmedDomain.
 }
 
 // GetByID ... Fetch only one sosmed by Id
-func (r *Repository) GetByID(id int) (*sosmedDomain.SocialMedia, error) {
+func (r *Repository) GetByID(id string) (*sosmedDomain.SocialMedia, error) {
 	var sosmed sosmedDomain.SocialMedia
 	err := r.DB.Where("id = ?", id).First(&sosmed).Error
 
@@ -106,7 +107,7 @@ func (r *Repository) GetByID(id int) (*sosmedDomain.SocialMedia, error) {
 }
 
 // UserGetByID ... Fetch only one sosmed by Id
-func (r *Repository) UserGetByID(id int, userId int) (*sosmedDomain.SocialMedia, error) {
+func (r *Repository) UserGetByID(id string, userId string) (*sosmedDomain.SocialMedia, error) {
 	var sosmed sosmedDomain.SocialMedia
 	err := r.DB.Where("id = ?", id).Where("user_id = ?", userId).First(&sosmed).Error
 
@@ -159,11 +160,16 @@ func (r *Repository) Create(newSocialMedia *sosmedDomain.SocialMedia) (createdSo
 }
 
 // Update ... Update sosmed
-func (r *Repository) Update(id int, updateSocialMedia *sosmedDomain.SocialMedia) (*sosmedDomain.SocialMedia, error) {
+func (r *Repository) Update(id string, updateSocialMedia *sosmedDomain.SocialMedia) (*sosmedDomain.SocialMedia, error) {
 	var sosmed sosmedDomain.SocialMedia
 
-	sosmed.ID = id
-	err := r.DB.Model(&sosmed).
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect sosmed id")
+	}
+
+	sosmed.ID = uuid
+	err = r.DB.Model(&sosmed).
 		Updates(updateSocialMedia).Error
 
 	if err != nil {
@@ -191,12 +197,17 @@ func (r *Repository) Update(id int, updateSocialMedia *sosmedDomain.SocialMedia)
 }
 
 // UserUpdate ... UserUpdate sosmed
-func (r *Repository) UserUpdate(id int, userId int, updateSocialMedia *sosmedDomain.SocialMedia) (*sosmedDomain.SocialMedia, error) {
+func (r *Repository) UserUpdate(id string, userId string, updateSocialMedia *sosmedDomain.SocialMedia) (*sosmedDomain.SocialMedia, error) {
 	var sosmed sosmedDomain.SocialMedia
 
-	sosmed.ID = id
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect sosmed id")
+	}
+
+	sosmed.ID = uuid
 	sosmed.UserID = userId
-	err := r.DB.Model(&sosmed).
+	err = r.DB.Model(&sosmed).
 		Updates(updateSocialMedia).Error
 
 	if err != nil {
@@ -224,7 +235,7 @@ func (r *Repository) UserUpdate(id int, userId int, updateSocialMedia *sosmedDom
 }
 
 // Delete ... Delete sosmed
-func (r *Repository) Delete(id int) (err error) {
+func (r *Repository) Delete(id string) (err error) {
 	tx := r.DB.Delete(&sosmedDomain.SocialMedia{}, id)
 
 	log.Println("check ", tx)

@@ -6,7 +6,7 @@ import (
 
 // ResponseUser is a struct that contains the response body for the user
 type ResponseUser struct {
-	ID        int        `json:"id" example:"1099"`
+	ID        string     `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3"`
 	UserName  string     `json:"user" example:"BossonH"`
 	Email     string     `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
 	Age       int        `json:"age" example:"1" validate:"required"`
@@ -17,7 +17,7 @@ type ResponseUser struct {
 
 // ResponseUser is a struct that contains the response body for the user
 type ResponseUserRole struct {
-	ID       int    `json:"id" example:"1099"`
+	ID       string `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3"`
 	UserName string `json:"user" example:"BossonH"`
 	Email    string `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
 	Role     Role

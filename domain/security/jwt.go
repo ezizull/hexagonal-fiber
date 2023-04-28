@@ -15,7 +15,7 @@ type AppToken struct {
 
 // Claims is a struct that contains the claims of the JWT
 type Claims struct {
-	UserID int    `json:"user_id"`
+	UserID string `json:"user_id"`
 	Type   string `json:"type"`
 	Role   string `json:"role"`
 	jwt.StandardClaims

@@ -32,7 +32,7 @@ func (s *Service) GetAll(page int, limit int) (*photoDomain.PaginationPhoto, err
 }
 
 // UserGetAll is a function that returns all photos
-func (s *Service) UserGetAll(userId int, page int, limit int) (*photoDomain.PaginationPhoto, error) {
+func (s *Service) UserGetAll(userId string, page int, limit int) (*photoDomain.PaginationPhoto, error) {
 
 	all, err := s.PhotoRepository.UserGetAll(userId, page, limit)
 	if err != nil {
@@ -51,17 +51,17 @@ func (s *Service) UserGetAll(userId int, page int, limit int) (*photoDomain.Pagi
 }
 
 // GetWithComments is a function that returns a photo by id
-func (s *Service) GetWithComments(id int, page int, limit int) (*photoDomain.ResponsePhotoComments, error) {
+func (s *Service) GetWithComments(id string, page int, limit int) (*photoDomain.ResponsePhotoComments, error) {
 	return s.PhotoRepository.GetWithComments(id, page, limit)
 }
 
 // GetByID is a function that returns a photo with comments by id
-func (s *Service) GetByID(id int) (*photoDomain.Photo, error) {
+func (s *Service) GetByID(id string) (*photoDomain.Photo, error) {
 	return s.PhotoRepository.GetByID(id)
 }
 
 // UserGetByID is a function that returns a photo by id
-func (s *Service) UserGetByID(id int, userId int) (*photoDomain.Photo, error) {
+func (s *Service) UserGetByID(id string, userId string) (*photoDomain.Photo, error) {
 	return s.PhotoRepository.UserGetByID(id, userId)
 }
 
@@ -79,18 +79,18 @@ func (s *Service) GetByMap(photoMap map[string]interface{}) (*photoDomain.Photo,
 }
 
 // Delete is a function that deletes a photo by id
-func (s *Service) Delete(id int) (err error) {
+func (s *Service) Delete(id string) (err error) {
 	return s.PhotoRepository.Delete(id)
 }
 
 // Update is a function that updates a photo by id
-func (s *Service) Update(id int, updatePhoto photoDomain.UpdatePhoto) (*photoDomain.Photo, error) {
+func (s *Service) Update(id string, updatePhoto photoDomain.UpdatePhoto) (*photoDomain.Photo, error) {
 	photo := updatePhoto.ToDomainMapper()
 	return s.PhotoRepository.Update(id, &photo)
 }
 
 // Update is a function that updates a photo by id
-func (s *Service) UserUpdate(id int, userId int, updatePhoto photoDomain.UpdatePhoto) (*photoDomain.Photo, error) {
+func (s *Service) UserUpdate(id string, userId string, updatePhoto photoDomain.UpdatePhoto) (*photoDomain.Photo, error) {
 	photo := updatePhoto.ToDomainMapper()
 	return s.PhotoRepository.UserUpdate(id, userId, &photo)
 }

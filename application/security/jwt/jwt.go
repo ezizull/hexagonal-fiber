@@ -11,7 +11,7 @@ import (
 )
 
 // GenerateJWTToken generates a JWT token (refresh or access)
-func GenerateJWTToken(userID int, tokenType string, roleName string) (appToken *secureDomain.AppToken, err error) {
+func GenerateJWTToken(userID string, tokenType string, roleName string) (appToken *secureDomain.AppToken, err error) {
 	tokenTimeUnix, err := getTimeExpire(tokenType)
 	if err != nil {
 		return

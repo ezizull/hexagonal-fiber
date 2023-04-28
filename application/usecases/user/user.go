@@ -21,14 +21,14 @@ func (s *Service) GetAll() (*[]userDomain.User, error) {
 }
 
 // GetWithRole is a function that returns a user with role by id
-func (s *Service) GetWithRole(id int) (responUserRole *userDomain.ResponseUserRole, err error) {
+func (s *Service) GetWithRole(id string) (responUserRole *userDomain.ResponseUserRole, err error) {
 	userRole, err := s.UserRepository.GetWithRole(id)
 	responUserRole = userRole.UserToResponseMapper()
 	return
 }
 
 // GetByID is a function that returns a user by id
-func (s *Service) GetByID(id int) (responUser *userDomain.ResponseUser, err error) {
+func (s *Service) GetByID(id string) (responUser *userDomain.ResponseUser, err error) {
 	user, err := s.UserRepository.GetByID(id)
 	responUser = user.DomainToResponseMapper()
 	return
@@ -59,12 +59,12 @@ func (s *Service) GetOneByMap(userMap map[string]interface{}) (*userDomain.User,
 }
 
 // Delete is a function that deletes a user by id
-func (s *Service) Delete(id int) error {
+func (s *Service) Delete(id string) error {
 	return s.UserRepository.Delete(id)
 }
 
 // Update is a function that updates a user by id
-func (s *Service) Update(id int, updateUser userDomain.UpdateUser) (*userDomain.User, error) {
+func (s *Service) Update(id string, updateUser userDomain.UpdateUser) (*userDomain.User, error) {
 	user := updateUser.ToDomainMapper()
 	return s.UserRepository.Update(id, &user)
 }

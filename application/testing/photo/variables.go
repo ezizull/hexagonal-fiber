@@ -35,12 +35,12 @@ var (
 	dropaDatabase   = fmt.Sprintf("DROP DATABASE %s", dbTestName)
 	createTable     = fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS %s (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        user_id INTEGER NOT NULL,
-        description TEXT NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        deleted_at TIMESTAMP
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+		title VARCHAR(255) NOT NULL,
+		user_id UUID NOT NULL DEFAULT uuid_generate_v4(),
+		description TEXT NOT NULL,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TIMESTAMP
     )`, dbTable)
 )

@@ -2,8 +2,6 @@
 package photo
 
 import (
-	"strconv"
-
 	useCasePhoto "hexagonal-fiber/application/usecases/photo"
 	photoDomain "hexagonal-fiber/domain/photo"
 
@@ -113,15 +111,10 @@ func (c *Controller) GetAllOwnPhotos(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
 func (c *Controller) GetPhotoWithComments(ctx *fiber.Ctx) (err error) {
-	photoID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 20)
 
+	photoID := ctx.Params("id")
 	photoComments, err := c.PhotoService.GetWithComments(photoID, page, limit)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
@@ -142,12 +135,7 @@ func (c *Controller) GetPhotoWithComments(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
 func (c *Controller) GetPhotoByID(ctx *fiber.Ctx) (err error) {
-	photoID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
+	photoID := ctx.Params("id")
 	photo, err := c.PhotoService.GetByID(photoID)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
@@ -169,12 +157,7 @@ func (c *Controller) GetPhotoByID(ctx *fiber.Ctx) (err error) {
 // @Router /photo/{photo_id} [get]
 func (c *Controller) UpdatePhoto(ctx *fiber.Ctx) (err error) {
 	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
-
-	photoID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
+	photoID := ctx.Params("id")
 
 	var request photoDomain.UpdatePhoto
 	if err := ctx.BodyParser(&request); err != nil {
@@ -217,12 +200,7 @@ func (c *Controller) UpdatePhoto(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /photo/{photo_id} [get]
 func (c *Controller) DeletePhoto(ctx *fiber.Ctx) (err error) {
-	photoID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "photo id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
+	photoID := ctx.Params("id")
 	if err = c.PhotoService.Delete(photoID); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return

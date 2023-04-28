@@ -34,7 +34,7 @@ func (s *Service) GetAll(page int, limit int) (*commentDomain.PaginationComment,
 }
 
 // UserGetAll is a function that returns all comments
-func (s *Service) UserGetAll(userId int, page int, limit int) (*commentDomain.PaginationComment, error) {
+func (s *Service) UserGetAll(userId string, page int, limit int) (*commentDomain.PaginationComment, error) {
 
 	all, err := s.CommentRepository.UserGetAll(userId, page, limit)
 	if err != nil {
@@ -53,12 +53,12 @@ func (s *Service) UserGetAll(userId int, page int, limit int) (*commentDomain.Pa
 }
 
 // GetByID is a function that returns a comment by id
-func (s *Service) GetByID(id int) (*commentDomain.Comment, error) {
+func (s *Service) GetByID(id string) (*commentDomain.Comment, error) {
 	return s.CommentRepository.GetByID(id)
 }
 
 // UserGetByID is a function that returns a comment by id
-func (s *Service) UserGetByID(id int, userId int) (*commentDomain.Comment, error) {
+func (s *Service) UserGetByID(id string, userId string) (*commentDomain.Comment, error) {
 	return s.CommentRepository.UserGetByID(id, userId)
 }
 
@@ -81,18 +81,18 @@ func (s *Service) GetByMap(commentMap map[string]interface{}) (*commentDomain.Co
 }
 
 // Delete is a function that deletes a comment by id
-func (s *Service) Delete(id int) (err error) {
+func (s *Service) Delete(id string) (err error) {
 	return s.CommentRepository.Delete(id)
 }
 
 // Update is a function that updates a comment by id
-func (s *Service) Update(id int, updateComment commentDomain.UpdateComment) (*commentDomain.Comment, error) {
+func (s *Service) Update(id string, updateComment commentDomain.UpdateComment) (*commentDomain.Comment, error) {
 	comment := updateComment.ToDomainMapper()
 	return s.CommentRepository.Update(id, &comment)
 }
 
 // Update is a function that updates a comment by id
-func (s *Service) UserUpdate(id int, userId int, updateComment commentDomain.UpdateComment) (*commentDomain.Comment, error) {
+func (s *Service) UserUpdate(id string, userId string, updateComment commentDomain.UpdateComment) (*commentDomain.Comment, error) {
 	comment := updateComment.ToDomainMapper()
 	return s.CommentRepository.UserUpdate(id, userId, &comment)
 }

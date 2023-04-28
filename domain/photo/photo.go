@@ -2,15 +2,17 @@ package photo
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Photo is a struct that contains the photo information
 type Photo struct {
-	ID        int        `json:"id" example:"1099" gorm:"primaryKey"`
+	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"gorm:"type:uuid;default:uuid_generate_v4()"`
 	Title     string     `json:"title" example:"title"`
 	Caption   string     `json:"caption" example:"caption"`
 	PhotoUrl  string     `json:"photo_url" example:"www.photo.com"`
-	UserID    int        `json:"user_id" gorm:"index"`
+	UserID    string     `json:"user_id" gorm:"index"`
 	CreatedAt time.Time  `json:"created_at,omitempty" example:"2021-02-24 20:19:39" gorm:"autoCreateTime:mili"`
 	UpdatedAt time.Time  `json:"updated_at,omitempty" example:"2021-02-24 20:19:39" gorm:"autoUpdateTime:mili"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty" example:"null"`

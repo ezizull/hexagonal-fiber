@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +56,7 @@ func (r *Repository) GetAll(page int, limit int) (*photoDomain.PaginationPhoto, 
 }
 
 // UserGetAll Fetch all photo data
-func (r *Repository) UserGetAll(userId int, page int, limit int) (*photoDomain.PaginationPhoto, error) {
+func (r *Repository) UserGetAll(userId string, page int, limit int) (*photoDomain.PaginationPhoto, error) {
 	var photos []photoDomain.Photo
 	var total int64
 
@@ -90,7 +91,7 @@ func (r *Repository) UserGetAll(userId int, page int, limit int) (*photoDomain.P
 }
 
 // GetWithComments ... Fetch a photo with comments by id
-func (r *Repository) GetWithComments(id int, page int, limit int) (*photoDomain.ResponsePhotoComments, error) {
+func (r *Repository) GetWithComments(id string, page int, limit int) (*photoDomain.ResponsePhotoComments, error) {
 	var photoComments photoDomain.PhotoComment
 	var total int64
 
@@ -100,8 +101,13 @@ func (r *Repository) GetWithComments(id int, page int, limit int) (*photoDomain.
 	}
 
 	offset := (page - 1) * limit
-	photoComments.ID = id
 
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect photo id")
+	}
+
+	photoComments.ID = uuid
 	err = r.DB.Model(&photoDomain.Photo{}).Preload("Comment").Limit(limit).Offset(offset).First(&photoComments).Error
 	if err != nil {
 		switch err.Error() {
@@ -140,7 +146,7 @@ func (r *Repository) GetWithComments(id int, page int, limit int) (*photoDomain.
 }
 
 // GetByID ... Fetch only one photo by Id
-func (r *Repository) GetByID(id int) (*photoDomain.Photo, error) {
+func (r *Repository) GetByID(id string) (*photoDomain.Photo, error) {
 	var photo photoDomain.Photo
 	err := r.DB.Where("id = ?", id).First(&photo).Error
 
@@ -157,7 +163,7 @@ func (r *Repository) GetByID(id int) (*photoDomain.Photo, error) {
 }
 
 // UserGetByID ... Fetch only one photo by Id
-func (r *Repository) UserGetByID(id int, userId int) (*photoDomain.Photo, error) {
+func (r *Repository) UserGetByID(id string, userId string) (*photoDomain.Photo, error) {
 	var photo photoDomain.Photo
 	err := r.DB.Where("id = ?", id).Where("user_id = ?", userId).First(&photo).Error
 
@@ -209,11 +215,16 @@ func (r *Repository) Create(newPhoto *photoDomain.Photo) (createdPhoto *photoDom
 }
 
 // Update ... Update photo
-func (r *Repository) Update(id int, updatePhoto *photoDomain.Photo) (*photoDomain.Photo, error) {
+func (r *Repository) Update(id string, updatePhoto *photoDomain.Photo) (*photoDomain.Photo, error) {
 	var photo photoDomain.Photo
 
-	photo.ID = id
-	err := r.DB.Model(&photo).
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect photo id")
+	}
+
+	photo.ID = uuid
+	err = r.DB.Model(&photo).
 		Updates(updatePhoto).Error
 
 	if err != nil {
@@ -242,12 +253,17 @@ func (r *Repository) Update(id int, updatePhoto *photoDomain.Photo) (*photoDomai
 }
 
 // UserUpdate ... UserUpdate photo
-func (r *Repository) UserUpdate(id int, userId int, updatePhoto *photoDomain.Photo) (*photoDomain.Photo, error) {
+func (r *Repository) UserUpdate(id string, userId string, updatePhoto *photoDomain.Photo) (*photoDomain.Photo, error) {
 	var photo photoDomain.Photo
 
-	photo.ID = id
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "incorrect photo id")
+	}
+
+	photo.ID = uuid
 	photo.UserID = userId
-	err := r.DB.Model(&photo).
+	err = r.DB.Model(&photo).
 		Updates(updatePhoto).Error
 
 	if err != nil {
@@ -276,7 +292,7 @@ func (r *Repository) UserUpdate(id int, userId int, updatePhoto *photoDomain.Pho
 }
 
 // Delete ... Delete photo
-func (r *Repository) Delete(id int) (err error) {
+func (r *Repository) Delete(id string) (err error) {
 	tx := r.DB.Delete(&photoDomain.Photo{}, id)
 
 	log.Println("check ", tx)

@@ -2,6 +2,7 @@ package photo
 
 import (
 	"fmt"
+	"strconv"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -40,7 +41,9 @@ func seedTestTable(its *IntTestSuite, db *gorm.DB) {
 	its.T().Log("seeding test table")
 
 	for i := 1; i <= 2; i++ {
-		query := fmt.Sprintf("INSERT INTO books (id, title, user_id, description, created_at, updated_at, deleted_at) VALUES (%d, 'Book %d', %d, 'Description %d', NOW(), NOW(), NULL)", i, i, i, i)
+		index := strconv.Itoa(i)
+		query := fmt.Sprintf("INSERT INTO books (id, title, user_id, description, created_at, updated_at, deleted_at) VALUES (%s, 'Book %s', %s, 'Description %s', NOW(), NOW(), NULL)", index, index, index, index)
+
 		tx := db.Exec(query)
 		if tx.Error != nil {
 			its.FailNowf("unable to seed table", tx.Error.Error())

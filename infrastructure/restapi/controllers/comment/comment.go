@@ -1,8 +1,6 @@
 package comment
 
 import (
-	"strconv"
-
 	useCaseComment "hexagonal-fiber/application/usecases/comment"
 	commentDomain "hexagonal-fiber/domain/comment"
 	secureDomain "hexagonal-fiber/domain/security"
@@ -117,12 +115,7 @@ func (c *Controller) GetAllOwnComments(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
 func (c *Controller) GetCommentByID(ctx *fiber.Ctx) (err error) {
-	commentID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "comment id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
+	commentID := ctx.Params("id")
 	comment, err := c.CommentService.GetByID(commentID)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
@@ -144,12 +137,7 @@ func (c *Controller) GetCommentByID(ctx *fiber.Ctx) (err error) {
 // @Router /comment/{comment_id} [get]
 func (c *Controller) UpdateComment(ctx *fiber.Ctx) (err error) {
 	authData := ctx.Locals(authConst.Authorized).(*secureDomain.Claims)
-
-	commentID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "comment id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
+	commentID := ctx.Params("id")
 
 	var request commentDomain.UpdateComment
 	if err := ctx.BodyParser(&request); err != nil {
@@ -192,12 +180,7 @@ func (c *Controller) UpdateComment(ctx *fiber.Ctx) (err error) {
 // @Failure 500 {object} controllers.MessageResponse
 // @Router /comment/{comment_id} [get]
 func (c *Controller) DeleteComment(ctx *fiber.Ctx) (err error) {
-	commentID, err := strconv.Atoi(ctx.Params("id"))
-	if err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, "comment id is invalid")
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
+	commentID := ctx.Params("id")
 	if err = c.CommentService.Delete(commentID); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 		return
