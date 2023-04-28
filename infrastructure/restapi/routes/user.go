@@ -11,11 +11,6 @@ import (
 func UserRoutes(router fiber.Router, controller *userController.Controller) {
 	routerAuth := router.Group("/user")
 
-	// public
-	{
-		routerAuth.Post("", controller.NewUser)
-	}
-
 	// authentication
 	routerAuth.Use(middlewares.AuthJWTMiddleware())
 	{

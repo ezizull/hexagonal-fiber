@@ -9,7 +9,7 @@ import (
 
 // SocialMediaAdapter is a function that returns a sosmed controller
 func SocialMediaAdapter(db databsDomain.Database) *sosmedController.Controller {
-	mRepository := sosmedRepository.Repository{DB: db.Postgre}
-	service := sosmedService.Service{SocialMediaRepository: mRepository}
+	sRepository := sosmedRepository.Repository{DB: db.Postgre}
+	service := sosmedService.Service{SocialMediaRepository: sRepository}
 	return &sosmedController.Controller{SocialMediaService: service}
 }

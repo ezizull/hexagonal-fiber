@@ -8,7 +8,7 @@ import (
 
 // Photo is a struct that contains the photo information
 type Photo struct {
-	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"type:uuid;default:uuid_generate_v4();primarykey"`
 	Title     string     `json:"title" example:"title"`
 	Caption   string     `json:"caption" example:"caption"`
 	PhotoUrl  string     `json:"photo_url" example:"www.photo.com"`

@@ -5,8 +5,6 @@ import (
 	userDomain "hexagonal-fiber/domain/user"
 	roleRepository "hexagonal-fiber/infrastructure/repository/postgres/role"
 	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Service is a struct that contains the repository implementation for user use case
@@ -23,6 +21,10 @@ func (s *Service) GetAll() (*[]userDomain.User, error) {
 // GetWithRole is a function that returns a user with role by id
 func (s *Service) GetWithRole(id string) (responUserRole *userDomain.ResponseUserRole, err error) {
 	userRole, err := s.UserRepository.GetWithRole(id)
+	if err != nil {
+		return nil, err
+	}
+
 	responUserRole = userRole.UserToResponseMapper()
 	return
 }
@@ -30,27 +32,12 @@ func (s *Service) GetWithRole(id string) (responUserRole *userDomain.ResponseUse
 // GetByID is a function that returns a user by id
 func (s *Service) GetByID(id string) (responUser *userDomain.ResponseUser, err error) {
 	user, err := s.UserRepository.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
 	responUser = user.DomainToResponseMapper()
 	return
-}
-
-// Create is a function that creates a new user
-func (s *Service) Create(newUser userDomain.NewUser) (*userDomain.User, error) {
-
-	_, err := s.RoleRepository.GetByID(newUser.RoleID)
-	if err != nil {
-		return nil, err
-	}
-
-	user := newUser.ToDomainMapper()
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-	user.HashPassword = string(hash)
-
-	return s.UserRepository.Create(user)
 }
 
 // GetOneByMap is a function that returns a user by map

@@ -10,7 +10,7 @@ import (
 
 // PhotoAdapter is a function that returns a photo controller
 func PhotoAdapter(db databsDomain.Database) *photoController.Controller {
-	mRepository := photoRepository.Repository{DB: db.Postgre}
-	service := photoService.Service{PhotoRepository: mRepository}
+	pRepository := photoRepository.Repository{DB: db.Postgre}
+	service := photoService.Service{PhotoRepository: pRepository}
 	return &photoController.Controller{PhotoService: service}
 }

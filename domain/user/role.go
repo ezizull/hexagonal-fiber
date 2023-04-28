@@ -8,7 +8,7 @@ import (
 
 // Role is a struct that contains the role information
 type Role struct {
-	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"type:uuid;default:uuid_generate_v4();primarykey"`
 	Name      string     `json:"name" gorm:"unique"`
 	CreatedAt time.Time  `json:"created_at,omitempty" example:"2021-02-24 20:19:39" gorm:"autoCreateTime:mili"`
 	UpdatedAt time.Time  `json:"updated_at,omitempty" example:"2021-02-24 20:19:39" gorm:"autoUpdateTime:mili"`

@@ -5,16 +5,38 @@ import (
 	"time"
 
 	"hexagonal-fiber/application/security/jwt"
-	userDomain "hexagonal-fiber/domain/user"
 
+	userDomain "hexagonal-fiber/domain/user"
+	roleRepository "hexagonal-fiber/infrastructure/repository/postgres/role"
 	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
 
 	"github.com/gofiber/fiber/v2"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Service is a struct that contains the repository implementation for auth use case
 type Service struct {
 	UserRepository userRepository.Repository
+	RoleRepository roleRepository.Repository
+}
+
+// Create is a function that creates a new user
+func (s *Service) Create(newUser userDomain.NewUser) (*userDomain.User, error) {
+
+	_, err := s.RoleRepository.GetByID(newUser.RoleID)
+	if err != nil {
+		return nil, err
+	}
+
+	user := newUser.ToDomainMapper()
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	user.HashPassword = string(hash)
+
+	return s.UserRepository.Create(user)
 }
 
 // LoginJWT implements the login with jwt methode use case

@@ -18,6 +18,7 @@ func RouteTemplateToPDF(routeTemplate string, data interface{}) (pdfContent stri
 	if err = viper.ReadInConfig(); err != nil {
 		return
 	}
+
 	wkhtmltopdfBin := viper.GetString("Tools.WkhtmltopdfBin")
 	randCryp, err := rand.Int(rand.Reader, big.NewInt(100))
 	if err != nil {
@@ -72,14 +73,15 @@ func process(t *template.Template, vars interface{}) string {
 	if err != nil {
 		panic(err)
 	}
+
 	return tmplBytes.String()
 }
 
 func processFile(rutaFileName string, vars interface{}) string {
 	tmpl, err := template.ParseFiles(rutaFileName)
-
 	if err != nil {
 		panic(err)
 	}
+
 	return process(tmpl, vars)
 }

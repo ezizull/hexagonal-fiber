@@ -8,7 +8,7 @@ import (
 
 // Comment is a struct that contains the comment information
 type Comment struct {
-	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID        uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"type:uuid;default:uuid_generate_v4();primarykey"`
 	UserID    string     `json:"user_id" gorm:"index"`
 	PhotoID   string     `json:"photo_id" gorm:"index"`
 	Message   string     `json:"message" example:"caption"`

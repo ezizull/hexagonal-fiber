@@ -18,40 +18,6 @@ type Controller struct {
 	UserService useCaseUser.Service
 }
 
-// NewUser godoc
-// @Tags user
-// @Summary Create New UserName
-// @Description Create new user on the system
-// @Security ApiKeyAuth
-// @Accept  json
-// @Produce  json
-// @Param data body NewUser true "body data"
-// @Success 200 {object} ResponseUser
-// @Failure 400 {object} controllers.MessageResponse
-// @Failure 500 {object} controllers.MessageResponse
-// @Router /user [post]
-func (c *Controller) NewUser(ctx *fiber.Ctx) (err error) {
-	var request userDomain.NewUser
-
-	if err = ctx.BodyParser(&request); err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.StatusBadRequest)
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
-	if err = createValidation(request); err != nil {
-		appError := fiber.NewError(fiber.StatusBadRequest, mssgConst.ValidationError)
-		return ctx.Status(fiber.StatusBadRequest).JSON(appError)
-	}
-
-	user, err := c.UserService.Create(request)
-	if err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
-		return
-	}
-
-	return ctx.Status(fiber.StatusCreated).JSON(user.DomainToResponseMapper())
-}
-
 // GetAllUsers godoc
 // @Tags user
 // @Summary Get all Users

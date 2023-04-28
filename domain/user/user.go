@@ -9,7 +9,7 @@ import (
 
 // User is a struct that contains the user information
 type User struct {
-	ID           uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID           uuid.UUID  `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"type:uuid;default:uuid_generate_v4();primarykey"`
 	UserName     string     `json:"userName" example:"UserName" gorm:"column:user_name;uniqueIndex"`
 	Email        string     `json:"email" example:"user@mail.com" gorm:"unique" validate:"required,email"`
 	HashPassword string     `json:"hash_password" example:"has@Password1"`

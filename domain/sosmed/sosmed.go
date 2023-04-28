@@ -8,7 +8,7 @@ import (
 
 // SocialMedia is a struct that contains the social media information
 type SocialMedia struct {
-	ID             uuid.UUID `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID             uuid.UUID `json:"id" example:"cef47ee2-7211-452a-a087-79ce4b8ec3a3" gorm:"type:uuid;default:uuid_generate_v4();primarykey"`
 	Name           string    `json:"name" example:"caption"`
 	SocialMediaUrl string    `json:"social_media_url" example:"www.sosmed.com"`
 	UserID         string    `json:"user_id" gorm:"index"`

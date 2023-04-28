@@ -13,6 +13,7 @@ func AuthRoutes(router fiber.Router, controller *authController.Controller) {
 	routerAuth := router.Group("/auth")
 	{
 		routerAuth.Post("/login", controller.Login)
+		routerAuth.Post("/register", controller.NewUser)
 		routerAuth.Post("/access-token", controller.GetAccessTokenByRefreshToken)
 	}
 

@@ -3,7 +3,10 @@ package adapter
 
 import (
 	authService "hexagonal-fiber/application/usecases/auth"
+
 	databsDomain "hexagonal-fiber/domain/database"
+
+	roleRepository "hexagonal-fiber/infrastructure/repository/postgres/role"
 	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
 	authController "hexagonal-fiber/infrastructure/restapi/controllers/auth"
 )
@@ -11,7 +14,12 @@ import (
 // AuthAdapter is a function that returns a auth controller
 func AuthAdapter(db databsDomain.Database) *authController.Controller {
 	uRepository := userRepository.Repository{DB: db.Postgre}
-	service := authService.Service{UserRepository: uRepository}
+	rRepository := roleRepository.Repository{DB: db.Postgre}
+
+	service := authService.Service{
+		UserRepository: uRepository,
+		RoleRepository: rRepository,
+	}
 
 	return &authController.Controller{
 		InfoRedis:   db.Redis,

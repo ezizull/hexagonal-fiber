@@ -12,7 +12,7 @@ import (
 	"time"
 
 	// driver postgres on this implementation
-	_ "github.com/lib/pq"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
