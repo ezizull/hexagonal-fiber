@@ -3,15 +3,18 @@ package adapter
 
 import (
 	authService "hexagonal-fiber/application/usecases/auth"
+	databsDomain "hexagonal-fiber/domain/database"
 	userRepository "hexagonal-fiber/infrastructure/repository/postgres/user"
 	authController "hexagonal-fiber/infrastructure/restapi/controllers/auth"
-
-	"gorm.io/gorm"
 )
 
 // AuthAdapter is a function that returns a auth controller
-func AuthAdapter(db *gorm.DB) *authController.Controller {
-	uRepository := userRepository.Repository{DB: db}
+func AuthAdapter(db databsDomain.Database) *authController.Controller {
+	uRepository := userRepository.Repository{DB: db.Postgre}
 	service := authService.Service{UserRepository: uRepository}
-	return &authController.Controller{AuthService: service}
+
+	return &authController.Controller{
+		InfoRedis:   db.Redis,
+		AuthService: service,
+	}
 }

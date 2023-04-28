@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"hexagonal-fiber/cmd"
+	databsDomain "hexagonal-fiber/domain/database"
 	secureDomain "hexagonal-fiber/domain/security"
 
 	"hexagonal-fiber/infrastructure/repository/postgres"
+	"hexagonal-fiber/infrastructure/repository/redis"
 
 	"log"
 	"os"
@@ -39,7 +41,13 @@ func main() {
 	// postgres connection
 	postgresDB, err := postgres.NewGorm()
 	if err != nil {
-		panic(fmt.Errorf("fatal error in postgres file: %s", err))
+		panic(fmt.Errorf("fatal error in postgres: %s", err))
+	}
+
+	// redis connection
+	redisDB, err := redis.InitRedis()
+	if err != nil {
+		panic(fmt.Errorf("fatal error in redis: %s", err))
 	}
 
 	// commands handler
@@ -51,11 +59,17 @@ func main() {
 		panic(fmt.Errorf("fatal error in getting key ssh: %s", err))
 	}
 
+	// combine databases
+	databases := databsDomain.Database{
+		Postgre: postgresDB,
+		Redis:   redisDB,
+	}
+
 	// root routes
-	routes.ApplicationRootRouter(router, postgresDB)
+	routes.ApplicationRootRouter(router, databases)
 
 	// postgres routes
-	routes.ApplicationV1Router(router, postgresDB)
+	routes.ApplicationV1Router(router, databases)
 
 	// running config
 	startServer(router)

@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type infoDatabaseRedis struct {
+type InfoDatabaseRedis struct {
 	Read struct {
 		Hostname   string
 		Username   string
@@ -37,10 +38,11 @@ var (
 	username = os.Getenv("REDIS_USER")
 	password = os.Getenv("REDIS_PASSWORD")
 	dbname   = os.Getenv("REDIS_DBNAME")
-	dbtime   = os.Getenv("REDIS_DBTIME")
 )
 
-func (infoDB *infoDatabaseRedis) getRedisConn(nameMap string) (err error) {
+var Ctx = context.Background()
+
+func (infoDB *InfoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 
 	viper.SetConfigFile("config.json")
 	err = viper.ReadInConfig()
@@ -84,18 +86,23 @@ func (infoDB *infoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 	return
 }
 
-func initRedisDB(inRedisDB *redis.Client, infoRed infoDatabaseRedis) (*redis.Client, error) {
-	database, err := strconv.ParseInt(infoRed.Write.Database, 10, 64)
-	if err != nil {
-		return nil, fiber.NewError(fiber.StatusInternalServerError, "error when connect to repository")
+func (infoRed InfoDatabaseRedis) NewRedis(database *int) (redisDB *redis.Client, err error) {
+	if database == nil {
+		var defaultDB int64
+
+		if defaultDB, err = strconv.ParseInt(infoRed.Write.Database, 10, 64); err != nil {
+			return nil, fiber.NewError(fiber.StatusInternalServerError, "error when connect to repository")
+		}
+
+		*database = int(defaultDB)
 	}
 
-	inRedisDB = redis.NewClient(&redis.Options{
+	redisDB = redis.NewClient(&redis.Options{
 		Addr:     infoRed.Write.Hostname + ":" + infoRed.Write.Port,
 		Username: infoRed.Write.Username,
 		Password: infoRed.Write.Password,
-		DB:       int(database),
+		DB:       int(*database),
 	})
 
-	return inRedisDB, nil
+	return redisDB, nil
 }

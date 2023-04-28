@@ -7,6 +7,7 @@ import (
 
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
+	"hexagonal-fiber/infrastructure/repository/redis"
 	"hexagonal-fiber/infrastructure/restapi/controllers"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,6 +15,7 @@ import (
 
 // Controller is a struct that contains the auth service
 type Controller struct {
+	InfoRedis   *redis.InfoDatabaseRedis
 	AuthService useCaseAuth.Service
 }
 

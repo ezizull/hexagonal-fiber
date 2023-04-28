@@ -2,25 +2,17 @@
 package routes
 
 import (
-	// swaggerFiles for documentation
 	_ "hexagonal-fiber/docs"
+	databsDomain "hexagonal-fiber/domain/database"
 	"hexagonal-fiber/infrastructure/restapi/adapter"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
-
-	"gorm.io/gorm"
 )
 
-// Security is a struct that contains the security of the application
-// @SecurityDefinitions.jwt
-type Security struct {
-	Authorization string `header:"Authorization" json:"Authorization"`
-}
-
-func ApplicationRootRouter(router fiber.Router, db *gorm.DB) {
+func ApplicationRootRouter(router fiber.Router, db databsDomain.Database) {
 	// Monitoring
 	{
 		router.Get("/metrics", monitor.New())
@@ -35,7 +27,7 @@ func ApplicationRootRouter(router fiber.Router, db *gorm.DB) {
 	}
 }
 
-func ApplicationV1Router(router fiber.Router, db *gorm.DB) {
+func ApplicationV1Router(router fiber.Router, db databsDomain.Database) {
 	routerV1 := router.Group("/v1")
 
 	{

@@ -12,7 +12,7 @@
       "Localhost": {
         "Read": {
           "Hostname": "localhost",
-          "Database": "hacktiv_final",
+          "Database": "hexagonal_fiber",
           "Username": "root",
           "Password": "root",
           "Port": "5432",
@@ -21,7 +21,7 @@
         },
         "Write": {
           "Hostname": "localhost",
-          "Database": "hacktiv_final",
+          "Database": "hexagonal_fiber",
           "Username": "root",
           "Password": "root",
           "Port": "5432",
@@ -41,7 +41,7 @@
         },
         "Write": {
           "Hostname": "localhost",
-          "Database": 0,
+          "Database": 1,
           "Username": "root",
           "Password": "root",
           "Port": "6379"

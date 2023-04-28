@@ -3,15 +3,14 @@ package adapter
 
 import (
 	photoService "hexagonal-fiber/application/usecases/photo"
+	databsDomain "hexagonal-fiber/domain/database"
 	photoRepository "hexagonal-fiber/infrastructure/repository/postgres/photo"
 	photoController "hexagonal-fiber/infrastructure/restapi/controllers/photo"
-
-	"gorm.io/gorm"
 )
 
 // PhotoAdapter is a function that returns a photo controller
-func PhotoAdapter(db *gorm.DB) *photoController.Controller {
-	mRepository := photoRepository.Repository{DB: db}
+func PhotoAdapter(db databsDomain.Database) *photoController.Controller {
+	mRepository := photoRepository.Repository{DB: db.Postgre}
 	service := photoService.Service{PhotoRepository: mRepository}
 	return &photoController.Controller{PhotoService: service}
 }
