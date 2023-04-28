@@ -22,7 +22,6 @@ func InitRedis() (*InfoDatabaseRedis, error) {
 		return nil, err
 	}
 
-	fmt.Println("ping redis ", pingStr)
-
+	fmt.Println("redis ping ", pingStr)
 	return &infoDB, nil
 }
