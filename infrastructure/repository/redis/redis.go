@@ -87,22 +87,22 @@ func (infoDB *InfoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 	return
 }
 
-func (infoRed InfoDatabaseRedis) NewRedis(database *int) (redisDB *redis.Client, err error) {
-	if database == nil {
+func (infoRed InfoDatabaseRedis) NewRedis(database int) (redisDB *redis.Client, err error) {
+	if &database == nil {
 		var defaultDB int64
 
 		if defaultDB, err = strconv.ParseInt(infoRed.Write.Database, 10, 64); err != nil {
 			return nil, fiber.NewError(fiber.StatusInternalServerError, "error when connect to repository")
 		}
 
-		*database = int(defaultDB)
+		database = int(defaultDB)
 	}
 
 	redisDB = redis.NewClient(&redis.Options{
 		Addr:     infoRed.Write.Hostname + ":" + infoRed.Write.Port,
 		Username: infoRed.Write.Username,
 		Password: infoRed.Write.Password,
-		DB:       int(*database),
+		DB:       int(database),
 	})
 
 	return redisDB, nil
