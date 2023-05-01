@@ -294,7 +294,7 @@ func (r *Repository) UserUpdate(id string, userId string, updatePhoto *photoDoma
 
 // Delete ... Delete photo
 func (r *Repository) Delete(id string) (err error) {
-	tx := r.DB.Delete(&photoDomain.Photo{}, id)
+	tx := r.DB.Where("id = ?", id).Delete(&photoDomain.Photo{})
 
 	log.Println("check ", tx)
 	if tx.Error != nil {

@@ -154,7 +154,7 @@ func (r *Repository) Update(id string, updateUser *userDomain.User) (*userDomain
 
 // Delete ... Delete user
 func (r *Repository) Delete(id string) (err error) {
-	tx := r.DB.Delete(&userDomain.User{}, id)
+	tx := r.DB.Where("id = ?", id).Delete(&userDomain.User{})
 	if tx.Error != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, mssgConst.UnknownError)
 	}

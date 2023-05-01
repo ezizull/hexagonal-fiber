@@ -162,5 +162,8 @@ func (c *Controller) DeleteUser(ctx *fiber.Ctx) (err error) {
 		return
 	}
 
+	redisDB := c.InfoRedis.NewRedis(0)
+	redisDB.Del(c.InfoRedis.CTX, ctx.IP())
+
 	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "resource deleted successfully"})
 }

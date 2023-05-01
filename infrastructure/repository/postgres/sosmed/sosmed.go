@@ -237,7 +237,7 @@ func (r *Repository) UserUpdate(id string, userId string, updateSocialMedia *sos
 
 // Delete ... Delete sosmed
 func (r *Repository) Delete(id string) (err error) {
-	tx := r.DB.Delete(&sosmedDomain.SocialMedia{}, id)
+	tx := r.DB.Where("id = ?", id).Delete(&sosmedDomain.SocialMedia{})
 
 	log.Println("check ", tx)
 	if tx.Error != nil {
