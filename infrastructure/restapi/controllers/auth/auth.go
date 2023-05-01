@@ -2,12 +2,14 @@
 package auth
 
 import (
+	"encoding/json"
 	useCaseAuth "hexagonal-fiber/application/usecases/auth"
 	userDomain "hexagonal-fiber/domain/user"
+	"time"
 
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
-	"hexagonal-fiber/infrastructure/repository/redis"
+	redisRepo "hexagonal-fiber/infrastructure/repository/redis"
 	"hexagonal-fiber/infrastructure/restapi/controllers"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +17,7 @@ import (
 
 // Controller is a struct that contains the auth service
 type Controller struct {
-	InfoRedis   *redis.InfoDatabaseRedis
+	InfoRedis   *redisRepo.InfoDatabaseRedis
 	AuthService useCaseAuth.Service
 }
 
@@ -80,6 +82,19 @@ func (c *Controller) Login(ctx *fiber.Ctx) (err error) {
 	authDataUser, err := c.AuthService.LoginJWT(request)
 	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
+		return
+	}
+
+	authJSON, err := json.Marshal(authDataUser)
+	if err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
+		return
+	}
+
+	redisDB := c.InfoRedis.NewRedis(0)
+	status := redisDB.Set(c.InfoRedis.CTX, ctx.IP(), authJSON, 30*60*time.Second)
+	if status.Err() != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed set redis"})
 		return
 	}
 

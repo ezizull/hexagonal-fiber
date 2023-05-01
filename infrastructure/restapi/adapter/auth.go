@@ -16,10 +16,7 @@ func AuthAdapter(db databsDomain.Database) *authController.Controller {
 	uRepository := userRepository.Repository{DB: db.Postgre}
 	rRepository := roleRepository.Repository{DB: db.Postgre}
 
-	service := authService.Service{
-		UserRepository: uRepository,
-		RoleRepository: rRepository,
-	}
+	service := authService.Service{UserRepository: uRepository, RoleRepository: rRepository}
 
 	return &authController.Controller{
 		InfoRedis:   db.Redis,

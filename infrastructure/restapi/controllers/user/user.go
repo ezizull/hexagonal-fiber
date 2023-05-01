@@ -2,19 +2,24 @@
 package user
 
 import (
+	"encoding/json"
+	"fmt"
 	useCaseUser "hexagonal-fiber/application/usecases/user"
 	userDomain "hexagonal-fiber/domain/user"
 
 	secureDomain "hexagonal-fiber/domain/security"
+	redisRepo "hexagonal-fiber/infrastructure/repository/redis"
 
 	authConst "hexagonal-fiber/utils/constant/auth"
 	mssgConst "hexagonal-fiber/utils/constant/message"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 // Controller is a struct that contains the user service
 type Controller struct {
+	InfoRedis   *redisRepo.InfoDatabaseRedis
 	UserService useCaseUser.Service
 }
 
@@ -65,10 +70,27 @@ func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
 	} else {
 		var userRole *userDomain.ResponseUserRole
 
-		userRole, err = c.UserService.GetWithRole(authData.UserID)
-		if err != nil {
-			ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
-			return
+		redisDB := c.InfoRedis.NewRedis(0)
+		redisData, redisErr := redisDB.Get(c.InfoRedis.CTX, ctx.IP()).Result()
+
+		if redisErr == redis.Nil {
+			userRole, err = c.UserService.GetWithRole(authData.UserID)
+			if err != nil {
+				ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": redisErr})
+				return
+			}
+
+		} else {
+			authDataUser := userDomain.SecurityAuthenticatedUser{}
+
+			err = json.Unmarshal([]byte(redisData), &authDataUser)
+			if err != nil {
+				ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
+				return
+			}
+
+			userRole = authDataUser.ToUserRoleResponse()
+			fmt.Println("check using redis", userRole)
 		}
 
 		return ctx.Status(fiber.StatusOK).JSON(userRole)

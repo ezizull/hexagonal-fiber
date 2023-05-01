@@ -12,12 +12,8 @@ func InitRedis() (*InfoDatabaseRedis, error) {
 		return nil, err
 	}
 
-	redisDB, err := infoDB.NewRedis(0)
-	if err != nil {
-		return nil, err
-	}
-
-	pingStr, err := redisDB.Ping(Ctx).Result()
+	redisDB := infoDB.NewRedis(0)
+	pingStr, err := redisDB.Ping(infoDB.CTX).Result()
 	if err != nil {
 		return nil, err
 	}

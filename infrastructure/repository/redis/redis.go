@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/mitchellh/mapstructure"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
@@ -29,6 +27,7 @@ type InfoDatabaseRedis struct {
 		Database   string
 		DriverConn string
 	}
+	CTX context.Context
 }
 
 // Database cradential
@@ -39,8 +38,6 @@ var (
 	password = os.Getenv("REDIS_PASSWORD")
 	dbname   = os.Getenv("REDIS_DBNAME")
 )
-
-var Ctx = context.Background()
 
 func (infoDB *InfoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 
@@ -77,6 +74,8 @@ func (infoDB *InfoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 		infoDB.Write.Database = dbname
 	}
 
+	infoDB.CTX = context.Background()
+
 	infoDB.Read.DriverConn = fmt.Sprintf("redis://%s:%s@%s:%s/%s",
 		infoDB.Read.Username, infoDB.Read.Password, infoDB.Read.Hostname, infoDB.Read.Port, infoDB.Read.Database)
 	infoDB.Write.DriverConn = fmt.Sprintf("redis://%s:%s@%s:%s/%s",
@@ -85,23 +84,14 @@ func (infoDB *InfoDatabaseRedis) getRedisConn(nameMap string) (err error) {
 	return
 }
 
-func (infoRed InfoDatabaseRedis) NewRedis(database int) (redisDB *redis.Client, err error) {
-	if &database == nil {
-		var defaultDB int64
-
-		if defaultDB, err = strconv.ParseInt(infoRed.Write.Database, 10, 64); err != nil {
-			return nil, fiber.NewError(fiber.StatusInternalServerError, "error when connect to repository")
-		}
-
-		database = int(defaultDB)
-	}
+func (infoRed InfoDatabaseRedis) NewRedis(database int) (redisDB *redis.Client) {
 
 	redisDB = redis.NewClient(&redis.Options{
 		Addr:     infoRed.Write.Hostname + ":" + infoRed.Write.Port,
 		Username: infoRed.Write.Username,
 		Password: infoRed.Write.Password,
-		DB:       int(database),
+		DB:       database,
 	})
 
-	return redisDB, nil
+	return redisDB
 }

@@ -15,5 +15,9 @@ func UserAdapter(db databsDomain.Database) *userController.Controller {
 	rRepository := roleRepository.Repository{DB: db.Postgre}
 
 	service := userService.Service{UserRepository: uRepository, RoleRepository: rRepository}
-	return &userController.Controller{UserService: service}
+
+	return &userController.Controller{
+		InfoRedis:   db.Redis,
+		UserService: service,
+	}
 }

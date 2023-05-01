@@ -36,3 +36,12 @@ func SecAuthUserRoleMapper(userRole *UserRole, authInfo *Auth) *SecurityAuthenti
 	}
 
 }
+
+func (secureAuth *SecurityAuthenticatedUser) ToUserRoleResponse() *ResponseUserRole {
+	return &ResponseUserRole{
+		ID:       secureAuth.Data.ID,
+		UserName: secureAuth.Data.UserName,
+		Email:    secureAuth.Data.Email,
+		Role:     secureAuth.Data.Role,
+	}
+}
