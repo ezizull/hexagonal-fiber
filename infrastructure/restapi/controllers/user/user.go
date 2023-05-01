@@ -3,7 +3,6 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	useCaseUser "hexagonal-fiber/application/usecases/user"
 	userDomain "hexagonal-fiber/domain/user"
 
@@ -90,7 +89,6 @@ func (c *Controller) GetUsersByID(ctx *fiber.Ctx) (err error) {
 			}
 
 			userRole = authDataUser.ToUserRoleResponse()
-			fmt.Println("check using redis", userRole)
 		}
 
 		return ctx.Status(fiber.StatusOK).JSON(userRole)
